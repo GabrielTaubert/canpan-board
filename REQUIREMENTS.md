@@ -1,8 +1,8 @@
-#Project Requirements
+# Project Requirements
 
 This document describes the functional requirements of the system using Mandatory, MUST, SHOULD, and CAN priorities.
 
-##Technical and Acceptance Requirements (Mandatory)
+## Technical and Acceptance Requirements (Mandatory)
 
 T01: The system must provide an Angular-based frontend using Angular Router for menu
 navigation.
@@ -17,9 +17,9 @@ function coverage), including end-to-end tests.
 T05: The system must be delivered as a runnable VirtualBox virtual machine including all
 documentation before the submission deadline.
 
-##MUST Requirements
+## MUST Requirements
 
-###Authentication & Session Management
+### Authentication & Session Management
 
 F01: The system must provide user registration for new users.
 Explanation: Users must be able to create an account to use the application.
@@ -43,7 +43,7 @@ Explanation: Users must see which members belong to a project.
 F07: The system must provide project deletion for authenticated users.
 Explanation: Projects must be removable by authorized users.
 
-###Project Navigation
+### Project Navigation
 
 F08: The system must provide Angular Router-based navigation for project functions.
 Explanation: Project functions must be accessible via dedicated Angular routes.
@@ -62,7 +62,7 @@ Explanation: Tasks must be creatable from the Kanban board and the task list vie
 F12: The system must provide drag-and-drop task movement for users.
 Explanation: Tasks must be movable between workflow columns.
 
-###Task List View
+### Task List View
 
 F13: The system must provide a task list view for project members.
 Explanation: Users must see all project tasks in a structured list.
@@ -70,7 +70,7 @@ Explanation: Users must see all project tasks in a structured list.
 F14: The system must display task status information for each task.
 Explanation: The task status corresponds to the Kanban board column.
 
-###Task Detail View
+### Task Detail View
 
 F15: The system must provide a task detail view for project members.
 Explanation: The task detail view shall display and allow editing of the task title,
@@ -85,7 +85,7 @@ F17: The system must provide functionality to download attachments from a task f
 Explanation: Users must be able to download uploaded task attachments.
 (Satisfies: Mandatory file download)
 
-###Project Dashboard
+### Project Dashboard
 
 F18: The system must provide a project dashboard for project members.
 Explanation: The dashboard visualizes overall project progress.
@@ -100,7 +100,7 @@ Explanation: Aggregated project statistics (e.g., story points per user or task 
 rate) shall be calculated with progress status updates displayed in the frontend.
 (Satisfies: Mandatory long-running backend task)
 
-###Member Management
+### Member Management
 
 F21: The system must provide a member management view for project administrators.
 Explanation: Administrators must manage project members.
@@ -109,7 +109,7 @@ F22: The system must provide project member management for administrators.
 Explanation: Administrators must be able to add, edit, and remove members within a
 project, including role or permission changes.
 
-##SHOULD Requirements
+## SHOULD Requirements
 
 S01: The system shall provide creation of additional task labels for users.
 Explanation: Labels such as UI, Backend, or Architecture can be defined.
@@ -129,7 +129,7 @@ Explanation: Users may update personal profile information.
 S06: The system shall provide editing of the Kanban board name.
 Explanation: Boards may be renamed.
 
-##CAN Requirements
+## CAN Requirements
 
 C01: The system can provide an archive function to hide completed tasks older than 30
 days.
