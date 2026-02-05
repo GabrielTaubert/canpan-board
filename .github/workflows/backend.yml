@@ -27,3 +27,9 @@ jobs:
 
       - name: Run tests
         run: mvn -B test
+      
+      - name: Check coverage
+        uses: themichaelhall/check-code-coverage@v2
+        with:
+          report: backend/target/site/jacoco/jacoco.xml
+          required-percentage: 60
