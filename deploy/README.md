@@ -84,3 +84,59 @@ kompletter reset:
 ```bash
 docker compose down -v
 ```
+
+# Install Supabase
+
+Homebrew is required to install the Supabase CLI.
+
+## install brew
+
+Run the following commands:
+
+```bash
+sudo apt update
+sudo apt install build-essential procps curl file git -y
+```
+
+Install Homebrew using the official script:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+After the installation finishes, Homebrew will display instructions to add it to your PATH.
+They will look similar to this:
+
+```bash
+echo >> /home/your_name/.bashrc
+echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv bash)"' >> /home/your_name/.bashrc
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv bash)"
+```
+
+Copy these commands from the terminal and execute them to activate Homebrew.
+
+Install additional dependencies:
+
+```bash
+sudo apt-get install build-essential
+```
+
+Verify Homebrew installation
+
+```bash
+brew --version
+```
+
+## install supabase
+
+Once Homebrew is installed, you can install Supabase:
+
+```bash
+brew install supabase/tap/supabase
+```
+
+Verify Supabase installation
+
+```bash
+supabase --version
+```
