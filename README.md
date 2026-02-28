@@ -1,84 +1,59 @@
-# run PostgreSQL (Ubuntu)
+# Local Development Setup
+## First-time setup (important)
 
-## Step 1 - Install PostgreSQL
+If you are setting up the project for the first time, please follow the README inside the `/deploy` folder step by step.
 
-Install PostgreSQL via apt:
+It contains all required instructions for installing dependencies.
+
+Make sure everything from `/deploy/README` is completed before continuing.
+
+## Start the project locally
+
+After the initial setup is done, you can start the full project with the following commands:
+
+```bas
+supabase start
+docker compose up -d --build
+```
+
+This will start:
+
+- Supabase (local database + services)
+
+- Spring Boot backend
+
+- Angular frontend 
+
+## Access the running services
+
+Once everything is running, you can access the application here:
+
+| Service | URL |
+|---------|---------|
+| Frontend	| http://localhost |
+| Backend	| http://localhost:8080 |
+| Supabase Studio	| http://localhost:54323 |
+| Supabase Database	| localhost:54322 |
+
+Supabase Studio allows you to inspect the database, tables, and logs via browser.
+
+## Stopping the project
+
+To stop everything:
 
 ```bash
-sudo apt update
-sudo apt install postgresql
+docker compose down
+supabase stop
 ```
 
-Check if installation was successful:
+## Notes
+
+Always start Supabase first, then the Docker containers.
+
+If you make changes to the backend or frontend Dockerfiles, rebuild with:
 
 ```bash
-psql --version
+docker compose up -d --build
 ```
 
-## step 2 - Check if PostgreSQL service is running
-
-PostgreSQL runs as a background service.
-
-Check status:
-
-```bash
-sudo systemctl status postgresql
-```
-
-If it is not running, start it:
-
-if not
-
-```bash
-sudo systemctl start postgresql
-```
-
-## Step 3 - initialize database Initial database setup (first time only)
-
-For the first setup you must create the project database and user.
-
-Login as PostgreSQL admin user:
-
-```bash
-sudo -u postgres psql
-```
-
-You are now inside the PostgreSQL terminal.
-
-Create database and user:
-
-```sql
-CREATE USER canpan_user WITH PASSWORD 'canpan_pw';
-CREATE DATABASE canpan_board OWNER canpan_user;
-GRANT ALL PRIVILEGES ON DATABASE canpan_board TO canpan_user;
-```
-
-This creates the database **canpan_board** and the user **canpan_user** with the password **canpan_pw**
-
-Exit the PostgreSQL terminal:
-
-```bash
-\q
-```
-
-## Step 4 - Test database connection
-
-Connect to the newly created database:
-
-```bash
-psql -h localhost -U canpan_user -d canpan_board
-```
-
-Enter password: **canpan_pw**. 
-
-If everything works, you should see:
-
-```bash
-canpan_board=>
-```
-
-Run a test query:
-
-```bash
-SELECT 1;
-```
+On Linux, host.docker.internal is mapped inside docker-compose for database access.
