@@ -1,6 +1,5 @@
-import { Component, signal } from '@angular/core';
-import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { Component} from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -10,12 +9,4 @@ import { filter } from 'rxjs/operators';
 })
 export class App {
   showHeader = true;
-
-  constructor(private router: Router) {
-    this.router.events
-    .pipe(filter(event => event instanceof NavigationEnd))
-    .subscribe((event : any) => {
-      this.showHeader = !event.urlAfterRedirects.startsWith('/auth');
-    })
-  }
 }
