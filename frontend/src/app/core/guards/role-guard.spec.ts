@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { CanActivateFn } from '@angular/router';
+import { CanActivateFn, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 
 import { roleGuard } from './role-guard';
 
@@ -13,5 +13,14 @@ describe('roleGuard', () => {
 
   it('should be created', () => {
     expect(executeGuard).toBeTruthy();
+  });
+
+  it('should allow activation and return true', () => {
+    const mockRoute = {} as ActivatedRouteSnapshot;
+    const mockState = {} as RouterStateSnapshot;
+
+    const result = executeGuard(mockRoute, mockState);
+
+    expect(result).toBe(true);
   });
 });
