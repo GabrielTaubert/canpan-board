@@ -33,7 +33,6 @@ describe('JwtInterceptor', () => {
     
     // Prüfen, ob der Header existiert
     expect(req.request.headers.has('Authorization')).toBeTruthy();
-    // Achtung: In deinem Code ist noch ein kleiner Bug bei den Backticks!
     expect(req.request.headers.get('Authorization')).toBe('Bearer mein-test-token');
     
     localStorage.removeItem('token');
