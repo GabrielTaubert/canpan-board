@@ -1,0 +1,50 @@
+.navbar {
+    background-color: #F97216;
+  color: white;
+  display: flex;
+  justify-content: space-between; // Verteilt Brand, Links und User
+  align-items: center;
+  padding: 0 2rem;
+  height: 64px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    
+    .logo-icon {
+      font-size: 1.8rem;
+    }
+  }
+
+  .navbar-links {
+    display: flex;
+    gap: 1.5rem;
+
+    a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      padding: 0.5rem 0.8rem;
+      border-radius: 4px;
+      transition: background 0.3s;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      &.active {
+        background: rgba(0, 0, 0, 0.1);
+        border-bottom: 2px solid white;
+      }
+    }
+  }
+
+  .navbar-user {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+}
