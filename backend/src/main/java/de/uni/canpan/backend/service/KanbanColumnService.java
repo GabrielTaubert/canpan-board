@@ -32,8 +32,8 @@ public class KanbanColumnService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow( () -> new IllegalArgumentException("Project not Found"));
 
-        List<KanbanColumn> existing = columnRepository.findByProjectIdOrderByPosition(projectId);
-        int size = existing.size();
+        List<KanbanColumn> columns = columnRepository.findByProjectIdOrderByPosition(projectId);
+        int size = columns.size();
 
         int insertPos = 0;
 
@@ -44,13 +44,22 @@ public class KanbanColumnService {
             insertPos = Math.max(0, Math.min(position, size));
         }
 
-        if (insertPos < size) {
-            columnRepository.incrementPositionsFrom(projectId, insertPos);
+        KanbanColumn newColumn = new KanbanColumn(project, name, -1);
+        columns.add(insertPos, newColumn);
+
+        for (int i = 0; i < columns.size(); i++) {
+            columns.get(i).setPosition(-(i + 1));
         }
+        columnRepository.saveAll(columns);
+        columnRepository.flush();
 
-        KanbanColumn newColumn = new KanbanColumn(project, name, insertPos);
+        for (int i = 0; i < columns.size(); i++) {
+            columns.get(i).setPosition(i);
+        }
+        columnRepository.saveAll(columns);
+        columnRepository.flush();
 
-        return columnRepository.save(newColumn);
+        return newColumn;
     }
 
     @Transactional
@@ -68,8 +77,8 @@ public class KanbanColumnService {
         KanbanColumn column = columnRepository.findByIdAndProjectId(columnId, projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Column not found"));
 
-        List<KanbanColumn> existing = columnRepository.findByProjectIdOrderByPosition(projectId);
-        int size = existing.size();
+        List<KanbanColumn> columns = columnRepository.findByProjectIdOrderByPosition(projectId);
+        int size = columns.size();
 
         int oldPosition = column.getPosition();
         int newPosition = Math.max(0, Math.min(position, size - 1));
@@ -78,19 +87,24 @@ public class KanbanColumnService {
             return column;
         }
 
-        //temporary put column on a guaranteed free position
-        column.setPosition(-1);
-        columnRepository.save(column);
+        //removes column from list to add it at new position
+        columns.removeIf(c -> c.getId().equals(columnId));
+        columns.add(newPosition, column);
+
+        //temporary put position on unused index
+        for (int i = 0; i < columns.size(); i++) {
+            columns.get(i).setPosition(-(i+1));
+        }
+        columnRepository.saveAll(columns);
         columnRepository.flush();
 
-        if (newPosition < oldPosition) {
-            columnRepository.incrementPositionsInRange(projectId, newPosition, oldPosition);
-        } else {
-            columnRepository.decrementPositionsInRange(projectId, oldPosition, newPosition);
+        for (int i = 0; i < columns.size(); i++) {
+           columns.get(i).setPosition(i);
         }
+        columnRepository.saveAll(columns);
+        columnRepository.flush();
 
-        column.setPosition(newPosition);
-        return columnRepository.save(column);
+        return column;
     }
 
     @Transactional
@@ -98,10 +112,23 @@ public class KanbanColumnService {
         KanbanColumn column = columnRepository.findByIdAndProjectId(columnId, projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Column not found"));
 
-        int removedPosition = column.getPosition();
+        List<KanbanColumn> columns = columnRepository.findByProjectIdOrderByPosition(projectId);
+
+        columns.removeIf(c -> c.getId().equals(columnId));
+
         columnRepository.delete(column);
         columnRepository.flush();
 
-        columnRepository.decrementPositionsAfter(projectId, removedPosition);
+        for (int i = 0; i < columns.size(); i++) {
+            columns.get(i).setPosition(-(i + 1));
+        }
+        columnRepository.saveAll(columns);
+        columnRepository.flush();
+
+        for (int i = 0; i < columns.size(); i++) {
+            columns.get(i).setPosition(i);
+        }
+        columnRepository.saveAll(columns);
+        columnRepository.flush();
     }
 }

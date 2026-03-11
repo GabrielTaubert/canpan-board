@@ -11,4 +11,11 @@ public class Project {
     @GeneratedValue
     private UUID id;
 
+    public Project() {
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
 }
