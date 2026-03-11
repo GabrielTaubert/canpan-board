@@ -73,7 +73,7 @@ export class KanbanBoard implements OnInit {
     }
   }
 
-  // Die zentrale Funktion zum Öffnen des Dialogs (Universal-Lösung)
+  // Die Funktion zum Öffnen des Dialog Fensters
   openTaskDialog(task?: Task, status?: 'TODO' | 'IN_PROGRESS' | 'DONE'): void {
   const dialogRef = this.dialog.open(TaskDialog, {
     width: '400px',
@@ -84,14 +84,14 @@ export class KanbanBoard implements OnInit {
     // Wenn der Dialog abgebrochen wurde (result ist null/undefined)
     if (!result) return;
 
-    // 1. Logik für DELETE
+    // Logik für DELETE
     if (result.delete && task) {
       this.allTasks = this.allTasks.filter(t => t.id !== task.id);
       console.log('Task gelöscht:', task.id);
       // Später: this.taskService.deleteTask(task.id).subscribe();
     } 
     
-    // 2. Logik für EDIT
+    // Logik für EDIT
     else if (task) {
       const index = this.allTasks.findIndex(t => t.id === task.id);
       if (index !== -1) {
@@ -101,7 +101,7 @@ export class KanbanBoard implements OnInit {
       }
     } 
     
-    // 3. Logik für CREATE
+    // Logik für CREATE
     else {
       const newTask: Task = { 
         ...result, 
