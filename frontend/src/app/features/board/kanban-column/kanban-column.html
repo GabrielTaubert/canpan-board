@@ -1,1 +1,14 @@
-<p>kanban-column works!</p>
+<div class="column">
+    <h2>{{ title }} ({{ tasks.length }})</h2>
+    <div 
+        class="task-container"
+        cdkDropList
+        [cdkDropListData]="tasks"
+        (cdkDropListDropped)="onDrop($event)">
+        <app-task-card 
+            *ngFor="let t of tasks"
+            [task]="t"
+            cdkDrag>
+        </app-task-card>
+    </div>
+</div>

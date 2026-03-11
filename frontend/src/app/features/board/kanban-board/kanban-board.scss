@@ -1,0 +1,16 @@
+.board-layout {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  padding: 20px;
+  height: calc(100vh - 100px);
+}
+
+.cdk-drag {
+  cursor: grab;
+  user-select: none;
+}
+
+.cdk-drag-active {
+  cursor: grabbing;
+}

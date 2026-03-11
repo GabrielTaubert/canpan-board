@@ -1,1 +1,19 @@
-<p>kanban-board works!</p>
+<div class="board-layout" cdkDropListGroup>
+    <app-kanban-column
+    title="To Do"
+    [tasks]="todoTasks"
+    (taskDropped)="handleTaskDrop($event, 'TODO')">
+    </app-kanban-column>
+
+    <app-kanban-column
+    title="In Progress"
+    [tasks]="inProgressTasks"
+    (taskDropped)="handleTaskDrop($event, 'IN_PROGRESS')">
+    </app-kanban-column>
+
+    <app-kanban-column
+    title="Done"
+    [tasks]="doneTasks"
+    (taskDropped)="handleTaskDrop($event, 'DONE')">
+    </app-kanban-column>
+</div>
