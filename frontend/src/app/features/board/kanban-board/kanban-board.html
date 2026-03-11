@@ -1,19 +1,25 @@
 <div class="board-layout" cdkDropListGroup>
-    <app-kanban-column
+  <app-kanban-column
     title="To Do"
     [tasks]="todoTasks"
-    (taskDropped)="handleTaskDrop($event, 'TODO')">
-    </app-kanban-column>
+    (taskDropped)="handleTaskDrop($event, 'TODO')"
+    (addTask)="openTaskDialog(undefined, 'TODO')"
+    (editTask)="openTaskDialog($event)">
+  </app-kanban-column>
 
-    <app-kanban-column
+  <app-kanban-column
     title="In Progress"
     [tasks]="inProgressTasks"
-    (taskDropped)="handleTaskDrop($event, 'IN_PROGRESS')">
-    </app-kanban-column>
+    (taskDropped)="handleTaskDrop($event, 'IN_PROGRESS')"
+    (addTask)="openTaskDialog(undefined, 'IN_PROGRESS')"
+    (editTask)="openTaskDialog($event)">
+  </app-kanban-column>
 
-    <app-kanban-column
+  <app-kanban-column
     title="Done"
     [tasks]="doneTasks"
-    (taskDropped)="handleTaskDrop($event, 'DONE')">
-    </app-kanban-column>
+    (taskDropped)="handleTaskDrop($event, 'DONE')"
+    (addTask)="openTaskDialog(undefined, 'DONE')"
+    (editTask)="openTaskDialog($event)">
+  </app-kanban-column>
 </div>

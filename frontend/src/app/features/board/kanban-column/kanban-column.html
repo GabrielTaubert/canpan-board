@@ -1,4 +1,4 @@
-<div class="column">
+<div class="column" (dblclick)="onColumnDblClick()">
     <h2>{{ title }} ({{ tasks.length }})</h2>
     <div 
         class="task-container"
@@ -8,7 +8,8 @@
         <app-task-card 
             *ngFor="let t of tasks"
             [task]="t"
-            cdkDrag>
+            cdkDrag
+            (dblclick)="onTaskDblClick(t, $event)">
         </app-task-card>
     </div>
 </div>

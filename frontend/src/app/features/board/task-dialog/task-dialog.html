@@ -1,0 +1,35 @@
+<h2 mat-dialog-title>{{ isEditMode ? 'Task bearbeiten' : 'Neuer Task' }}</h2>
+
+<mat-dialog-content>
+  <div class="form-container">
+    <mat-form-field appearance="outline">
+      <mat-label>Titel</mat-label>
+      <input matInput [(ngModel)]="task.title" placeholder="Was ist zu tun?">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Priorität</mat-label>
+      <mat-select [(ngModel)]="task.priority">
+        <mat-option value="LOW">Niedrig</mat-option>
+        <mat-option value="MEDIUM">Mittel</mat-option>
+        <mat-option value="HIGH">Hoch</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Beschreibung</mat-label>
+      <textarea matInput [(ngModel)]="task.description" rows="3"></textarea>
+    </mat-form-field>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button *ngIf="isEditMode" mat-button color="warn" (click)="onDelete()">
+    Löschen
+  </button>
+  
+  <span class="spacer"></span> <button mat-button (click)="onCancel()">Abbrechen</button>
+  <button mat-raised-button color="primary" [mat-dialog-close]="task">
+    {{ isEditMode ? 'Speichern' : 'Erstellen' }}
+  </button>
+</mat-dialog-actions>

@@ -4,6 +4,8 @@ import { Task } from '../../../core/models/task-model';
 import { TaskService } from '../../../core/services/task';
 import { ActivatedRoute } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { MatDialog } from '@angular/material/dialog';
+import { TaskDialog } from '../task-dialog/task-dialog';
 
 @Component({
   selector: 'app-kanban-board',
@@ -19,7 +21,7 @@ export class KanbanBoard implements OnInit {
 
   projectId: string | null = null;
 
-  constructor(private taskService: TaskService, private route: ActivatedRoute) {}
+  constructor(private taskService: TaskService, private route: ActivatedRoute, private dialog: MatDialog) {}
 
   ngOnInit(): void {
     // Id aus der URL lesen (:id im Routing)
@@ -70,4 +72,47 @@ export class KanbanBoard implements OnInit {
       }
     }
   }
+
+  // Die zentrale Funktion zum Öffnen des Dialogs (Universal-Lösung)
+  openTaskDialog(task?: Task, status?: 'TODO' | 'IN_PROGRESS' | 'DONE'): void {
+  const dialogRef = this.dialog.open(TaskDialog, {
+    width: '400px',
+    data: { task: task, status: status }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    // Wenn der Dialog abgebrochen wurde (result ist null/undefined)
+    if (!result) return;
+
+    // 1. Logik für DELETE
+    if (result.delete && task) {
+      this.allTasks = this.allTasks.filter(t => t.id !== task.id);
+      console.log('Task gelöscht:', task.id);
+      // Später: this.taskService.deleteTask(task.id).subscribe();
+    } 
+    
+    // 2. Logik für EDIT
+    else if (task) {
+      const index = this.allTasks.findIndex(t => t.id === task.id);
+      if (index !== -1) {
+        this.allTasks[index] = { ...task, ...result }; 
+        console.log('Task aktualisiert:', this.allTasks[index]);
+        // Später: this.taskService.updateTask(this.allTasks[index]).subscribe();
+      }
+    } 
+    
+    // 3. Logik für CREATE
+    else {
+      const newTask: Task = { 
+        ...result, 
+        id: Math.random().toString(36).substring(2, 9),
+        createdAt: new Date() 
+      };
+      this.allTasks.push(newTask);
+      console.log('Neuer Task erstellt:', newTask);
+    }
+
+    this.updateColumnArrays(); // UI in jedem Fall aktualisieren
+  });
+}
 }
