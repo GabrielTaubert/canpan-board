@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { KanbanBoard } from './kanban-board';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 
 describe('KanbanBoard', () => {
   let component: KanbanBoard;
@@ -8,7 +9,16 @@ describe('KanbanBoard', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [KanbanBoard]
+      imports: [KanbanBoard],
+      providers: [
+        provideRouter([]), // Stellt sicher, dass Router-Services vorhanden sind
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: { paramMap: new Map() }
+            }
+          }
+        ]
     })
     .compileComponents();
 
