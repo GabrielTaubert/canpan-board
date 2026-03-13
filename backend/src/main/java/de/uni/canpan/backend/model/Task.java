@@ -4,6 +4,8 @@ package de.uni.canpan.backend.model;
 import jakarta.persistence.*;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -49,6 +51,9 @@ public class Task {
     @Column(name = "updated_at")
     private Timestamp updatedAt;
 
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TaskAttachment> attachments = new ArrayList<>();
+
     protected Task() {};
 
     public Task(
@@ -80,20 +85,29 @@ public class Task {
     }
 
     public UUID getId() { return id; }
+
     public KanbanColumn getColumn() { return column; }
     public void setColumn(KanbanColumn column) { this.column = column; }
+
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
     public TaskStatus getStatus() { return status; }
     public void setStatus(TaskStatus status) { this.status = status; }
+
     public TaskPriority getPriority() { return priority; }
     public void setPriority(TaskPriority priority) { this.priority = priority; }
+
     public UUID getAssignedTo() { return assignedTo; }
     public void setAssignedTo(UUID assignedTo) { this.assignedTo = assignedTo; }
+
     public Timestamp getCreatedAt() { return createdAt; }
+
     public Timestamp getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+
+    public List<TaskAttachment> getAttachments() { return attachments; }
 
 }
