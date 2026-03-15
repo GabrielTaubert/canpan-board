@@ -11,7 +11,7 @@ Make sure everything from `/deploy/README` is completed before continuing.
 
 After the initial setup is done, you can start the full project with the following commands:
 
-```bas
+```bash
 supabase start
 docker compose up -d --build
 ```
