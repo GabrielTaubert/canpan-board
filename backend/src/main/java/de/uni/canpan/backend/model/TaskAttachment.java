@@ -9,7 +9,7 @@ import java.util.UUID;
 public class TaskAttachment {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -19,20 +19,20 @@ public class TaskAttachment {
     @Column(name = "file_name", nullable = false)
     private String fileName;
 
-    @Column(name = "file_path", nullable = false)
-    private String filePath;
+    @Column(name = "file_url", nullable = false)
+    private String fileUrl;
 
     protected TaskAttachment() {};
 
-    public TaskAttachment(Task task, String fileName, String filePath) {
+    public TaskAttachment(Task task, String fileName, String fileUrl) {
         this.task = task;
         this.fileName = fileName;
-        this.filePath = filePath;
+        this.fileUrl = fileUrl;
     }
 
     public UUID getId() {return id;}
     public Task getTask() {return task;}
     public String getFileName() {return fileName;}
-    public String getFilePath() {return filePath;}
+    public String getFilePath() {return fileUrl;}
 
 }

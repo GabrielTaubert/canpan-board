@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS tasks (
 
     assigned_to UUID, --Member
 
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE,
 
   CONSTRAINT fk_kanban_can_col
   FOREIGN KEY (column_id)

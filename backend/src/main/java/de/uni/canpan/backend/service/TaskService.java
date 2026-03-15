@@ -8,11 +8,13 @@ import de.uni.canpan.backend.model.TaskAttachment;
 import de.uni.canpan.backend.repository.KanbanColumnRepository;
 import de.uni.canpan.backend.repository.TaskAttachmentRepository;
 import de.uni.canpan.backend.repository.TaskRepository;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
+@Service
 public class TaskService {
 
     private final TaskRepository taskRepository;
@@ -27,12 +29,12 @@ public class TaskService {
         this.columnRepository = columnRepository;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<Task> getColumnTasks(UUID columnId) {
         return taskRepository.findByColumnId(columnId);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<Task> getProjectTasks(UUID projectId) {
         return taskRepository.findByColumnProjectId(projectId);
     }
@@ -70,7 +72,7 @@ public class TaskService {
         return task;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public TaskDetailDto getTaskDetail(UUID taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));

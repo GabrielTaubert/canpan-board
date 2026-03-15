@@ -2,7 +2,7 @@ package de.uni.canpan.backend.dto;
 
 import de.uni.canpan.backend.model.Task;
 
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,7 +15,7 @@ public record TaskDetailDto(
         Task.TaskPriority priority,
         Integer storypoints,
         UUID assignedTo,
-        Timestamp createdAt,
-        Timestamp updatedAt,
+        OffsetDateTime createdAt,
+        OffsetDateTime updatedAt,
         List<TaskAttachmentDto> attachments
 ) {}
