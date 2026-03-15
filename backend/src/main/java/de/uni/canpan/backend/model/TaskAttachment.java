@@ -16,18 +16,23 @@ public class TaskAttachment {
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
 
-    @Column(name = "file_url", nullable = false)
-    private String fileUrl;
+    @Column(name = "file_name", nullable = false)
+    private String fileName;
+
+    @Column(name = "file_path", nullable = false)
+    private String filePath;
 
     protected TaskAttachment() {};
 
-    public TaskAttachment(Task task, String fileUrl) {
+    public TaskAttachment(Task task, String fileName, String filePath) {
         this.task = task;
-        this.fileUrl = fileUrl;
+        this.fileName = fileName;
+        this.filePath = filePath;
     }
 
     public UUID getId() {return id;}
     public Task getTask() {return task;}
-    public String getFileUrl() {return fileUrl;}
+    public String getFileName() {return fileName;}
+    public String getFilePath() {return filePath;}
 
 }

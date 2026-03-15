@@ -12,10 +12,6 @@ import java.util.UUID;
 @Table(name = "tasks")
 public class Task {
 
-    public enum TaskStatus {
-        TODO, IN_PROGRESS, DONE
-    }
-
     public enum TaskPriority {
         LOW, MEDIUM, HIGH
     }
@@ -36,11 +32,10 @@ public class Task {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TaskStatus status;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private TaskPriority priority;
+
+    @Column(nullable = false)
+    private Integer storypoints;
 
     @Column(name = "assigned_to")
     private UUID assignedTo;
@@ -60,14 +55,14 @@ public class Task {
             KanbanColumn column,
             String title,
             String description,
-            TaskStatus status,
             TaskPriority priority,
+            Integer storypoints,
             UUID assignedTo) {
         this.column = column;
         this.title = title;
         this.description = description;
-        this.status = status;
         this.priority = priority;
+        this.storypoints = storypoints;
         this.assignedTo = assignedTo;
     }
 
@@ -75,7 +70,6 @@ public class Task {
     protected void onCreate() {
         createdAt = new Timestamp(System.currentTimeMillis());
         updatedAt = null;
-        if (status == null) status = TaskStatus.TODO;
         if (priority == null) priority = TaskPriority.MEDIUM;
     }
 
@@ -95,11 +89,11 @@ public class Task {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public TaskStatus getStatus() { return status; }
-    public void setStatus(TaskStatus status) { this.status = status; }
-
     public TaskPriority getPriority() { return priority; }
     public void setPriority(TaskPriority priority) { this.priority = priority; }
+
+    public Integer getStorypoints() {return storypoints;}
+    public void setStorypoints(Integer storypoints) { this.storypoints = storypoints;}
 
     public UUID getAssignedTo() { return assignedTo; }
     public void setAssignedTo(UUID assignedTo) { this.assignedTo = assignedTo; }

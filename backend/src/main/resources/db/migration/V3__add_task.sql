@@ -1,4 +1,3 @@
-CREATE TYPE task_status AS ENUM ('TODO', 'IN_PROGRESS', 'DONE');
 CREATE TYPE task_priority AS ENUM ('LOW', 'MEDIUM', 'HIGH');
 
 CREATE TABLE IF NOT EXISTS tasks (
@@ -8,8 +7,9 @@ CREATE TABLE IF NOT EXISTS tasks (
     title TEXT NOT NULL,
     description TEXT,
 
-    status task_status NOT NULL DEFAULT 'TODO',
     priority task_priority NOT NULL DEFAULT 'MEDIUM',
+
+    storypoints INTEGER DEFAULT 1,
 
     assigned_to UUID, --Member
 
