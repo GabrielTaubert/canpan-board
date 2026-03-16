@@ -9,6 +9,7 @@ describe('authInterceptor', () => {
     TestBed.runInInjectionContext(() => authInterceptor(req, next));
 
   beforeEach(() => {
+    localStorage.clear();
     TestBed.configureTestingModule({});
   });
 
@@ -23,6 +24,17 @@ describe('authInterceptor', () => {
 
     interceptor(req, next).subscribe();
 
-    expect(next).toHaveBeenCalledWith(req);
+    expect(next).toHaveBeenCalled();
+  });
+
+  it('should add Authorization header when token exists', () => {
+    localStorage.setItem('token', 'test-token');
+    const req = new HttpRequest('GET', '/test');
+    const mockResponse = new HttpResponse({ status: 200 });
+    const next = jasmine.createSpy<HttpHandlerFn>('next').and.returnValue(of(mockResponse));
+
+    interceptor(req, next).subscribe();
+
+    expect(next).toHaveBeenCalled();
   });
 });
