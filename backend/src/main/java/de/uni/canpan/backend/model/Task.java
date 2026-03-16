@@ -2,6 +2,8 @@ package de.uni.canpan.backend.model;
 
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -31,7 +33,8 @@ public class Task {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, name = "priority")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private TaskPriority priority;
 
     @Column(nullable = false)
