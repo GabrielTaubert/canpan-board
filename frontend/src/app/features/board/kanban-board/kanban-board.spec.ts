@@ -45,12 +45,16 @@ describe('KanbanBoard', () => {
   });
 
   it('should filter tasks by status using getTasksByStatus', async () => {
+    const taskService = TestBed.inject(TaskService);
+    (taskService.getTasks as jasmine.Spy).and.returnValue(of(mockTasks));
+    
+    component.ngOnInit();
     await fixture.whenStable();
     fixture.detectChanges();
 
     const todoTasks = component.getTasksByStatus('TODO');
     
-    expect(todoTasks.length).toBeGreaterThan(0);
+    expect(todoTasks.length).toBe(1);
     expect(todoTasks[0].title).toBe('Task 1');
   });
 
