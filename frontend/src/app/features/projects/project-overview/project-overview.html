@@ -1,1 +1,24 @@
-<p>project-overview works!</p>
+<div class="project-overview">
+  <div class="create-project">
+    <input
+      type="text"
+      [(ngModel)]="newProjectName"
+      placeholder="New project name"
+      class="project-name-input"
+    />
+    <button (click)="createProject()" class="btn-create">Create Project</button>
+  </div>
+
+  <div class="project-grid">
+    <div *ngFor="let project of projects" class="project-card">
+      <h3 class="project-name">{{ project.name }}</h3>
+      <div class="project-members">
+        <span *ngFor="let member of project.members" class="member-badge">{{ member }}</span>
+      </div>
+      <div class="project-actions">
+        <button (click)="openProject(project.id)" class="btn-open">Open</button>
+        <button (click)="deleteProject(project.id)" class="btn-delete">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
