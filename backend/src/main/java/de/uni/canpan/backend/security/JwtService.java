@@ -19,10 +19,24 @@ import java.util.Optional;
 @Service
 public class JwtService {
 
-    private final PublicKey publicKey;
+    private volatile PublicKey publicKey;
+    private final String supabaseUrl;
+    private final RestTemplate restTemplate;
 
     public JwtService(SupabaseProperties supabaseProperties, RestTemplate restTemplate) {
-        this.publicKey = loadPublicKeyFromJwks(supabaseProperties.getUrl(), restTemplate);
+        this.supabaseUrl = supabaseProperties.getUrl();
+        this.restTemplate = restTemplate;
+    }
+
+    private PublicKey getPublicKey() {
+        if (publicKey == null) {
+            synchronized (this) {
+                if (publicKey == null) {
+                    publicKey = loadPublicKeyFromJwks(supabaseUrl, restTemplate);
+                }
+            }
+        }
+        return publicKey;
     }
 
     private PublicKey loadPublicKeyFromJwks(String supabaseUrl, RestTemplate restTemplate) {
@@ -56,7 +70,7 @@ public class JwtService {
     public Optional<Claims> validateToken(String token) {
         try {
             Claims claims = Jwts.parser()
-                    .verifyWith(publicKey)
+                    .verifyWith(getPublicKey())
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();

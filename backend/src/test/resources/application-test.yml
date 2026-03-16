@@ -4,3 +4,8 @@ spring:
       ddl-auto: create-drop
   datasource:
     driver-class-name: org.postgresql.Driver
+
+supabase:
+  url: http://localhost:54321
+  anon-key: test-anon-key
+  service-role-key: test-service-role-key
