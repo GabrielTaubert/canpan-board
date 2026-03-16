@@ -1,0 +1,71 @@
+.task-card {
+  cursor: grab;
+  position: relative;
+  user-select: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  
+  display: block;
+  background: white;   
+  padding: 10px;
+  border: 1px solid #ccc;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  pointer-events: auto !important;
+  touch-action: none; 
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  h3 {
+    margin: 0 0 5px 0;
+    font-size: 1rem;
+  }
+
+  h3, .priority-badge {
+    pointer-events: none; 
+    user-select: none;
+    color: #1F2937;
+  }
+
+  .priority-badge {
+    pointer-events: none;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+    display: inline-block;
+    margin: 0;
+    
+    &[data-priority="HIGH"] { background: #ff4d4d; color: white; }
+    &[data-priority="MEDIUM"] { background: #ffa500; color: white; }
+    &[data-priority="LOW"] { background: #2ecc71; color: white; }
+  }
+}
+
+.cdk-drag-preview {
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important;
+  border-radius: 4px;
+  background: white;
+  display: block;
+  width: 100%; 
+  box-sizing: border-box; 
+  pointer-events: none; 
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.2;
+  background: #eee;
+  border: 2px dashed #ccc;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  
+  min-height: 80px; 
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}

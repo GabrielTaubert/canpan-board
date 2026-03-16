@@ -1,1 +1,6 @@
-<p>task-card works!</p>
+<div class="task-card" draggable="false">
+    <h3>{{ task.title }}</h3>
+    <span class="priority-badge" [attr.data-priority]="task.priority">
+        {{ task.priority }}
+    </span>
+</div>

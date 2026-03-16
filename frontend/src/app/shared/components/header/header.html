@@ -1,0 +1,16 @@
+<nav class="navbar">
+    <div class="navbar-brand">
+        <span class="logo-icon">🍳</span>
+        <span class="logo-text">CanPan</span>
+    </div>
+
+    <div class="navbar-links">
+        <a routerLink="/projects" routerLinkActive="active">Projekte</a>
+        <a [routerLink]="['/project', '1', 'board']" routerLinkActive="active">Board</a>
+        <a [routerLink]="['/project', '1', 'dashboard']" routerLinkActive="active">Dashboard</a>
+    </div>
+
+    <div class="navbar-user">
+        <span>Elias 🦎</span>
+    </div>
+</nav>
