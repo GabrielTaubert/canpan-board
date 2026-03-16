@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MainLayout } from './main-layout';
 import { provideRouter, Router, NavigationEnd } from '@angular/router';
 import { Subject } from 'rxjs';
+import { AuthService } from '../../../services/auth.service';
 
 describe('MainLayout', () => {
   let component: MainLayout;
@@ -12,7 +13,8 @@ describe('MainLayout', () => {
     await TestBed.configureTestingModule({
       imports: [MainLayout],
       providers: [
-        provideRouter([])
+        provideRouter([]),
+        { provide: AuthService, useValue: { logout: jasmine.createSpy('logout') } }
       ]
     })
     .compileComponents();
