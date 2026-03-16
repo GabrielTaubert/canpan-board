@@ -5,7 +5,6 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
   jpa:
     hibernate:
-      #ddl-auto: none
       ddl-auto: validate
     properties:
       hibernate:
@@ -16,7 +15,16 @@ server:
   port: 8080
 
 supabase:
-  url: ${SUPABASE_URL}
-  anon-key: ${SUPABASE_ANON_KEY}
-  service-role-key: ${SUPABASE_SERVICE_ROLE_KEY}
-  jwt-secret: ${SUPABASE_JWT_SECRET}
+  url: ${SUPABASE_URL:http://localhost:54321}
+  anon-key: ${SUPABASE_ANON_KEY:default-anon-key-for-tests}
+  service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:default-service-key-for-tests}
+  jwt-secret: ${SUPABASE_JWT_SECRET:super-secret-jwt-key-with-at-least-32-characters}
+  s3:
+    endpoint: ${SUPABASE_S3_ENDPOINT:http://127.0.0.1:54321/storage/v1/s3}
+    region: ${SUPABASE_S3_REGION:local}
+    access-key: ${SUPABASE_S3_ACCESS_KEY:625729a08b95bf1b7ff351a663f3a23c}
+    secret-key: ${SUPABASE_S3_SECRET_KEY:850181e4652dd023b7a98c58ae0d2d34bd487ee0cc3254aed6eda37307425907}
+    bucket: ${SUPABASE_S3_BUCKET:task-attachments}
+  storage:
+    # URL for Frontend, for picture access
+    public-url: ${SUPABASE_STORAGE_PUBLIC_URL:http://127.0.0.1:54321/storage/v1/object/public/task-attachments/}

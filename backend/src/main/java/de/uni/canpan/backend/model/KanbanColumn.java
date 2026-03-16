@@ -9,7 +9,7 @@ import java.util.UUID;
 public class KanbanColumn {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
