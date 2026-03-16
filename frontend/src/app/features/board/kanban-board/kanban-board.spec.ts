@@ -10,7 +10,6 @@ describe('KanbanBoard', () => {
   let component: KanbanBoard;
   let fixture: ComponentFixture<KanbanBoard>;
 
-  // Mock-Tasks für die Tests
   const mockTasks: Task[] = [
     { id: '1', title: 'Task 1', status: 'TODO' } as Task,
     { id: '2', title: 'Task 2', status: 'IN_PROGRESS' } as Task
@@ -30,7 +29,7 @@ describe('KanbanBoard', () => {
         {
           provide: TaskService,
           useValue: {
-            getTasks: () => of(mockTasks)
+            getTasks: jasmine.createSpy('getTasks').and.returnValue(of(mockTasks))
           }
         }
       ]
@@ -38,7 +37,7 @@ describe('KanbanBoard', () => {
 
     fixture = TestBed.createComponent(KanbanBoard);
     component = fixture.componentInstance;
-    fixture.detectChanges(); // Triggert ngOnInit und getTasks()
+    fixture.detectChanges();
   });
 
   it('should create', () => {
@@ -46,16 +45,21 @@ describe('KanbanBoard', () => {
   });
 
   it('should filter tasks by status using getTasksByStatus', async () => {
-    fixture.detectChanges(); 
-    await fixture.whenStable(); 
+    const taskService = TestBed.inject(TaskService);
+    (taskService.getTasks as jasmine.Spy).and.returnValue(of(mockTasks));
+    
+    component.ngOnInit();
+    await fixture.whenStable();
+    fixture.detectChanges();
 
     const todoTasks = component.getTasksByStatus('TODO');
     
-    expect(todoTasks.length).toBeGreaterThan(0);
+    expect(todoTasks.length).toBe(1);
     expect(todoTasks[0].title).toBe('Task 1');
   });
 
   it('should move an item within the same column (handleTaskDrop)', () => {
+    component.allTasks = [...mockTasks];
     const data = [...mockTasks];
     const mockEvent = {
       previousContainer: { data: data },
@@ -66,13 +70,13 @@ describe('KanbanBoard', () => {
 
     component.handleTaskDrop(mockEvent, 'TODO');
     
-    // Check ob die Reihenfolge getauscht wurde
     expect(data[0].title).toBe('Task 2');
     expect(data[1].title).toBe('Task 1');
   });
 
   it('should transfer an item to a different column (handleTaskDrop)', () => {
-    const sourceData = [mockTasks[0]]; // Task 1 (TODO)
+    component.allTasks = [...mockTasks];
+    const sourceData = [mockTasks[0]];
     const targetData: Task[] = [];
     
     const mockEvent = {
@@ -84,7 +88,6 @@ describe('KanbanBoard', () => {
 
     component.handleTaskDrop(mockEvent, 'IN_PROGRESS');
 
-    // Check ob Task verschoben wurde
     expect(targetData.length).toBe(1);
     expect(targetData[0].status).toBe('IN_PROGRESS');
     expect(sourceData.length).toBe(0);
