@@ -1,5 +1,7 @@
 package de.uni.canpan.backend.service;
 
+import de.uni.canpan.backend.dto.MoveTaskRequest;
+import de.uni.canpan.backend.dto.TaskRequest;
 import de.uni.canpan.backend.dto.TaskAttachmentDto;
 import de.uni.canpan.backend.dto.TaskDetailDto;
 import de.uni.canpan.backend.model.KanbanColumn;
@@ -40,36 +42,38 @@ public class TaskService {
     }
 
     @Transactional
-    public Task createTask(UUID columnId,
-                           String title,
-                           String description,
-                           Task.TaskPriority priority,
-                           Integer storypoints,
-                           UUID assignedTo){
+    public Task createTask(UUID columnId, TaskRequest request) {
         KanbanColumn column = columnRepository.findById(columnId)
-                .orElseThrow(() -> new IllegalArgumentException("Column not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Column not found with ID: " + columnId));
 
-        Task newTask = new Task(column, title, description, priority, storypoints, assignedTo);
+        Task newTask = new Task(
+                column,
+                request.title(),
+                request.description(),
+                request.priority(),
+                request.storypoints(),
+                request.assignedTo()
+        );
 
         return taskRepository.save(newTask);
     }
 
     @Transactional
-    public Task moveTask(UUID taskId, UUID columnId) {
+    public Task moveTask(UUID taskId, MoveTaskRequest request) {
 
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
-        KanbanColumn targetColumn = columnRepository.findById(columnId)
-                .orElseThrow(() -> new IllegalArgumentException("Column not found"));
-
-        if (task.getColumn().getId().equals(columnId)) {
+        if (task.getColumn().getId().equals(request.columnId())) {
             return task;
         }
 
+        KanbanColumn targetColumn = columnRepository.findById(request.columnId())
+                .orElseThrow(() -> new IllegalArgumentException("Column not found"));
+
         task.setColumn(targetColumn);
 
-        return task;
+        return taskRepository.save(task);
     }
 
     @Transactional(readOnly = true)
@@ -97,25 +101,19 @@ public class TaskService {
     }
 
     @Transactional
-    public Task editTask(UUID taskId,
-                         String title,
-                         String description,
-                         UUID columnId,
-                         Task.TaskPriority priority,
-                         Integer storypoints,
-                         UUID assignedTo){
+    public Task editTask(UUID taskId, TaskRequest request) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
-        KanbanColumn column = columnRepository.findById(columnId)
+        KanbanColumn column = columnRepository.findById(request.columnId())
                 .orElseThrow(() -> new IllegalArgumentException("Column not found"));
 
-        task.setTitle(title);
-        task.setDescription(description);
+        task.setTitle(request.title());
+        task.setDescription(request.description());
         task.setColumn(column);
-        task.setPriority(priority);
-        task.setStorypoints(storypoints);
-        task.setAssignedTo(assignedTo);
+        task.setPriority(request.priority());
+        task.setStorypoints(request.storypoints());
+        task.setAssignedTo(request.assignedTo());
 
         return task;
     }
