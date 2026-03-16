@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { CanActivateFn } from '@angular/router';
+import { ActivatedRouteSnapshot, CanActivateFn, RouterStateSnapshot } from '@angular/router';
 
 import { roleGuard } from './role-guard';
 
 describe('roleGuard', () => {
-  const executeGuard: CanActivateFn = (...guardParameters) => 
-      TestBed.runInInjectionContext(() => roleGuard(...guardParameters));
+  const executeGuard: CanActivateFn = (...guardParameters) =>
+    TestBed.runInInjectionContext(() => roleGuard(...guardParameters));
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
@@ -13,5 +13,12 @@ describe('roleGuard', () => {
 
   it('should be created', () => {
     expect(executeGuard).toBeTruthy();
+  });
+
+  it('should allow activation', () => {
+    const route = {} as ActivatedRouteSnapshot;
+    const state = {} as RouterStateSnapshot;
+    const result = executeGuard(route, state);
+    expect(result).toBeTrue();
   });
 });

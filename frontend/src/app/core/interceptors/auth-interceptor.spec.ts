@@ -1,10 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpResponse } from '@angular/common/http';
+import { of } from 'rxjs';
 
 import { authInterceptor } from './auth-interceptor';
 
 describe('authInterceptor', () => {
-  const interceptor: HttpInterceptorFn = (req, next) => 
+  const interceptor: HttpInterceptorFn = (req, next) =>
     TestBed.runInInjectionContext(() => authInterceptor(req, next));
 
   beforeEach(() => {
@@ -13,5 +14,15 @@ describe('authInterceptor', () => {
 
   it('should be created', () => {
     expect(interceptor).toBeTruthy();
+  });
+
+  it('should pass the request through to the next handler', () => {
+    const req = new HttpRequest('GET', '/test');
+    const mockResponse = new HttpResponse({ status: 200 });
+    const next = jasmine.createSpy<HttpHandlerFn>('next').and.returnValue(of(mockResponse));
+
+    interceptor(req, next).subscribe();
+
+    expect(next).toHaveBeenCalledWith(req);
   });
 });
