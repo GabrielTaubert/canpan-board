@@ -9,6 +9,7 @@ export const routes: Routes = [
   //unprotected routes
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
   //routes protected by authGuard
   {
     path: '',
@@ -42,5 +43,5 @@ export const routes: Routes = [
     ],
   },
 
-  { path: '**', redirectTo: 'projects' },
+  { path: '**', redirectTo: 'login' },
 ];

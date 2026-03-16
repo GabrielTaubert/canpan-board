@@ -272,7 +272,7 @@ export class LoginComponent {
 
     this.authService.login({ email: this.email, password: this.password }).subscribe({
       next: (_response: AuthResponse) => {
-        this.router.navigate(['/']);
+        this.router.navigate(['/projects']);
       },
       error: (err: { error?: { message?: string } }) => {
         this.loading.set(false);
