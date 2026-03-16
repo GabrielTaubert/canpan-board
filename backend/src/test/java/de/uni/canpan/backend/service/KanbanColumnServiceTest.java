@@ -35,7 +35,7 @@ class KanbanColumnServiceTest extends AbstractPostgresIntegrationTest {
         columnRepository.deleteAll();
         projectRepository.deleteAll();
 
-        project = projectRepository.save(new Project());
+        project = projectRepository.save(new Project("Test Project"));
     }
 
     @Test
