@@ -5,6 +5,7 @@ import de.uni.canpan.backend.model.KanbanColumn;
 import de.uni.canpan.backend.model.Project;
 import de.uni.canpan.backend.repository.KanbanColumnRepository;
 import de.uni.canpan.backend.repository.ProjectRepository;
+import de.uni.canpan.backend.repository.TaskRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ class KanbanColumnServiceTest extends AbstractPostgresIntegrationTest {
     private KanbanColumnService service;
 
     @Autowired
+    private TaskRepository taskRepository;
+
+    @Autowired
     private KanbanColumnRepository columnRepository;
 
     @Autowired
@@ -32,6 +36,7 @@ class KanbanColumnServiceTest extends AbstractPostgresIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        taskRepository.deleteAll();
         columnRepository.deleteAll();
         projectRepository.deleteAll();
 
