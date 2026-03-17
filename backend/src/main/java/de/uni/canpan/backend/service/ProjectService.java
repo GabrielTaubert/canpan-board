@@ -1,9 +1,7 @@
 package de.uni.canpan.backend.service;
 
-import de.uni.canpan.backend.model.KanbanColumn;
 import de.uni.canpan.backend.model.Project;
 import de.uni.canpan.backend.model.User;
-import de.uni.canpan.backend.repository.KanbanColumnRepository;
 import de.uni.canpan.backend.repository.ProjectRepository;
 import de.uni.canpan.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -12,17 +10,18 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+
 @Service
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
-    private final KanbanColumnRepository kanbanColumnRepository;
+    private final KanbanColumnService kanbanColumnService;
 
-    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository, KanbanColumnRepository kanbanColumnRepository) {
+    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository, KanbanColumnService kanbanColumnService) {
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
-        this.kanbanColumnRepository = kanbanColumnRepository;
+        this.kanbanColumnService = kanbanColumnService;
     }
 
     @Transactional(readOnly = true)
@@ -37,8 +36,7 @@ public class ProjectService {
         Project project = new Project(name);
         project.getMembers().add(creator);
         Project saved = projectRepository.save(project);
-        kanbanColumnRepository.save(new KanbanColumn(saved, "TODO", 0));
-        kanbanColumnRepository.save(new KanbanColumn(saved, "Done", 1));
+        kanbanColumnService.initializeProject(saved);
         return saved;
     }
 

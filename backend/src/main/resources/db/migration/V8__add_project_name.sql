@@ -1,0 +1,2 @@
+ALTER TABLE projects
+    ADD COLUMN name VARCHAR(255);

@@ -13,7 +13,7 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column
     private String name;
 
     @ManyToMany
