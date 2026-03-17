@@ -1,7 +1,9 @@
 package de.uni.canpan.backend.service;
 
+import de.uni.canpan.backend.model.KanbanColumn;
 import de.uni.canpan.backend.model.Project;
 import de.uni.canpan.backend.model.User;
+import de.uni.canpan.backend.repository.KanbanColumnRepository;
 import de.uni.canpan.backend.repository.ProjectRepository;
 import de.uni.canpan.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -15,10 +17,12 @@ public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final KanbanColumnRepository kanbanColumnRepository;
 
-    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository) {
+    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository, KanbanColumnRepository kanbanColumnRepository) {
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+        this.kanbanColumnRepository = kanbanColumnRepository;
     }
 
     @Transactional(readOnly = true)
@@ -32,7 +36,10 @@ public class ProjectService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         Project project = new Project(name);
         project.getMembers().add(creator);
-        return projectRepository.save(project);
+        Project saved = projectRepository.save(project);
+        kanbanColumnRepository.save(new KanbanColumn(saved, "TODO", 0));
+        kanbanColumnRepository.save(new KanbanColumn(saved, "Done", 1));
+        return saved;
     }
 
     @Transactional
