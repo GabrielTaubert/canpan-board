@@ -1,4 +1,3 @@
 CREATE TABLE IF NOT EXISTS projects (
-    id UUID PRIMARY KEY,
-    name TEXT NOT NULL
+    id UUID PRIMARY KEY
 );

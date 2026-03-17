@@ -1,7 +1,10 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   datasource:
     driver-class-name: org.postgresql.Driver
 
@@ -9,3 +12,5 @@ supabase:
   url: http://localhost:54321
   anon-key: test-anon-key
   service-role-key: test-service-role-key
+  flyway:
+    enabled: true
