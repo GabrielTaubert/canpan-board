@@ -150,4 +150,35 @@ class TaskServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(projectATasks).hasSize(1);
         assertThat(projectATasks.get(0).getTitle()).isEqualTo("Task 1");
     }
+
+    @Test
+    void getColumnTasks_excludesArchivedTasks() {
+        // Eine aktive Task
+        taskRepository.save(new Task(column, "Active Task", "...", Task.TaskPriority.LOW, 1, null));
+
+        // Eine archivierte Task
+        Task archivedTask = new Task(column, "Archived Task", "...", Task.TaskPriority.LOW, 1, null);
+        archivedTask.setArchived(true); // Das neue Flag setzen
+        taskRepository.save(archivedTask);
+
+        List<Task> activeTasks = taskService.getColumnTasks(column.getId());
+
+        // Test: Es darf nur die aktive Task zurückkommen
+        assertThat(activeTasks).hasSize(1);
+        assertThat(activeTasks.get(0).getTitle()).isEqualTo("Active Task");
+    }
+
+    @Test
+    void getProjectTasks_excludesArchivedTasks() {
+        taskRepository.save(new Task(column, "Active Project Task", "...", Task.TaskPriority.LOW, 1, null));
+
+        Task archivedTask = new Task(column, "Archived Project Task", "...", Task.TaskPriority.LOW, 1, null);
+        archivedTask.setArchived(true);
+        taskRepository.save(archivedTask);
+
+        List<Task> activeTasks = taskService.getProjectTasks(project.getId());
+
+        assertThat(activeTasks).hasSize(1);
+        assertThat(activeTasks.get(0).getTitle()).isEqualTo("Active Project Task");
+    }
 }

@@ -33,12 +33,12 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public List<Task> getColumnTasks(UUID columnId) {
-        return taskRepository.findByColumnId(columnId);
+        return taskRepository.findActiveByColumnId(columnId);
     }
 
     @Transactional(readOnly = true)
     public List<Task> getProjectTasks(UUID projectId) {
-        return taskRepository.findByColumnProjectId(projectId);
+        return taskRepository.findActiveByProjectId(projectId);
     }
 
     @Transactional

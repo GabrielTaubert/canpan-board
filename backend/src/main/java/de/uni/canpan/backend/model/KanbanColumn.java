@@ -22,6 +22,9 @@ public class KanbanColumn {
     @Column
     private int position; //index from 0
 
+    @Column(name = "is_system", nullable = false)
+    private boolean isSystem = false;
+
     protected KanbanColumn() {}
 
     public KanbanColumn(Project project, String name, int position){
@@ -31,10 +34,16 @@ public class KanbanColumn {
     }
 
     public UUID getId() { return id; }
+
     public Project getProject() { return project; }
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
     public int getPosition() { return position; }
     public void setPosition(int position) { this.position = position; }
+
+    public boolean isSystem() { return isSystem; }
+    public void setSystem(boolean system) { isSystem = system; }
 
 }

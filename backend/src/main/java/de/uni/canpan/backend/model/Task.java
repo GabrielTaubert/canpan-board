@@ -52,6 +52,9 @@ public class Task {
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TaskAttachment> attachments = new ArrayList<>();
 
+    @Column(nullable = false)
+    private boolean archived = false;
+
     protected Task() {};
 
     public Task(
@@ -106,5 +109,8 @@ public class Task {
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
 
     public List<TaskAttachment> getAttachments() { return attachments; }
+
+    public boolean isArchived() { return archived; }
+    public void setArchived(boolean archived) { this.archived = archived; }
 
 }
