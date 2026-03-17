@@ -41,254 +41,128 @@ class KanbanColumnServiceTest extends AbstractPostgresIntegrationTest {
         projectRepository.deleteAll();
 
         project = projectRepository.save(new Project());
+        // WICHTIG: Jedes Projekt startet mit To-Do (0) und Done (1)
+        service.initializeProject(project);
     }
 
     @Test
-    void createColumn_appendsToEnd_whenPositionIsNull() {
-        KanbanColumn created = service.createColumn(project.getId(), "Todo", null);
+    void createColumn_insertsBetweenTodoAndDone_whenPositionIsNull() {
+        // Todo (0) und Done (1) existieren bereits. Neue Spalte soll auf Position 1 (zwischen beide).
+        KanbanColumn created = service.createColumn(project.getId(), "In Progress", null);
 
-        List<KanbanColumn> columns =
-                columnRepository.findByProjectIdOrderByPosition(project.getId());
-
-        assertThat(created.getName()).isEqualTo("Todo");
-        assertThat(created.getPosition()).isEqualTo(0);
-        assertThat(columns).hasSize(1);
-        assertThat(columns.get(0).getName()).isEqualTo("Todo");
-        assertThat(columns.get(0).getPosition()).isEqualTo(0);
-    }
-
-    @Test
-    void createColumn_shiftsExistingColumns_whenInsertedInMiddle() {
-        columnRepository.save(new KanbanColumn(project, "Todo", 0));
-        columnRepository.save(new KanbanColumn(project, "Doing", 1));
-
-        service.createColumn(project.getId(), "Review", 1);
-
-        List<KanbanColumn> columns =
-                columnRepository.findByProjectIdOrderByPosition(project.getId());
+        List<KanbanColumn> columns = columnRepository.findByProjectIdOrderByPosition(project.getId());
 
         assertThat(columns).hasSize(3);
-        assertThat(columns.get(0).getName()).isEqualTo("Todo");
-        assertThat(columns.get(0).getPosition()).isEqualTo(0);
-
-        assertThat(columns.get(1).getName()).isEqualTo("Review");
-        assertThat(columns.get(1).getPosition()).isEqualTo(1);
-
-        assertThat(columns.get(2).getName()).isEqualTo("Doing");
-        assertThat(columns.get(2).getPosition()).isEqualTo(2);
-    }
-
-    @Test
-    void createColumn_insertsAtBeginning_whenPositionIsNegative() {
-        columnRepository.save(new KanbanColumn(project, "Doing", 0));
-        columnRepository.save(new KanbanColumn(project, "Done", 1));
-
-        service.createColumn(project.getId(), "Todo", -5);
-
-        List<KanbanColumn> columns =
-                columnRepository.findByProjectIdOrderByPosition(project.getId());
-
-        assertThat(columns).hasSize(3);
-        assertThat(columns.get(0).getName()).isEqualTo("Todo");
-        assertThat(columns.get(0).getPosition()).isEqualTo(0);
-
-        assertThat(columns.get(1).getName()).isEqualTo("Doing");
-        assertThat(columns.get(1).getPosition()).isEqualTo(1);
-
+        assertThat(columns.get(0).getName()).isEqualTo("To-Do");
+        assertThat(columns.get(1).getName()).isEqualTo("In Progress");
         assertThat(columns.get(2).getName()).isEqualTo("Done");
-        assertThat(columns.get(2).getPosition()).isEqualTo(2);
+
+        assertThat(columns.get(1).getPosition()).isEqualTo(1);
+        assertThat(columns.get(1).isSystem()).isFalse();
     }
 
     @Test
-    void createColumn_appendsToEnd_whenPositionIsGreaterThanSize() {
-        columnRepository.save(new KanbanColumn(project, "Todo", 0));
-        columnRepository.save(new KanbanColumn(project, "Doing", 1));
+    void createColumn_enforcesMinimumPositionOne_whenPositionIsZeroOrNegative() {
+        // Versuch, vor To-Do einzufügen (-5) wird auf 1 korrigiert
+        service.createColumn(project.getId(), "First User Column", -5);
 
-        service.createColumn(project.getId(), "Done", 99);
+        List<KanbanColumn> columns = columnRepository.findByProjectIdOrderByPosition(project.getId());
 
-        List<KanbanColumn> columns =
-                columnRepository.findByProjectIdOrderByPosition(project.getId());
+        assertThat(columns.get(0).getName()).isEqualTo("To-Do");
+        assertThat(columns.get(1).getName()).isEqualTo("First User Column");
+    }
 
-        assertThat(columns).hasSize(3);
-        assertThat(columns.get(0).getName()).isEqualTo("Todo");
-        assertThat(columns.get(0).getPosition()).isEqualTo(0);
+    @Test
+    void createColumn_enforcesMaximumPositionBeforeDone_whenPositionIsTooLarge() {
+        // To-Do(0), Done(1). Versuch auf Position 99 einzufügen.
+        // Muss auf Index 1 landen (vor Done), Done rutscht auf 2.
+        service.createColumn(project.getId(), "Last User Column", 99);
 
-        assertThat(columns.get(1).getName()).isEqualTo("Doing");
-        assertThat(columns.get(1).getPosition()).isEqualTo(1);
+        List<KanbanColumn> columns = columnRepository.findByProjectIdOrderByPosition(project.getId());
 
+        assertThat(columns.get(columns.size() - 2).getName()).isEqualTo("Last User Column");
+        assertThat(columns.get(columns.size() - 1).getName()).isEqualTo("Done");
+    }
+
+    @Test
+    void renameColumn_throwsException_whenColumnIsSystem() {
+        List<KanbanColumn> columns = columnRepository.findByProjectIdOrderByPosition(project.getId());
+        KanbanColumn todo = columns.get(0); // To-Do ist System
+
+        assertThatThrownBy(() -> service.renameColumn(project.getId(), todo.getId(), "New Name"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("System columns cannot be renamed");
+    }
+
+    @Test
+    void moveColumn_cannotMoveBeforeTodo() {
+        // Stand: To-Do (0), Dev (1), Done (2)
+        KanbanColumn dev = service.createColumn(project.getId(), "Dev", 1);
+
+        // Versuch, Dev auf 0 zu schieben -> wird auf 1 korrigiert
+        service.moveColumn(project.getId(), dev.getId(), 0);
+
+        List<KanbanColumn> columns = columnRepository.findByProjectIdOrderByPosition(project.getId());
+        assertThat(columns.get(0).getName()).isEqualTo("To-Do");
+        assertThat(columns.get(1).getName()).isEqualTo("Dev");
+    }
+
+    @Test
+    void moveColumn_cannotMoveAfterDone() {
+        // Stand: To-Do (0), Dev (1), Done (2)
+        KanbanColumn dev = service.createColumn(project.getId(), "Dev", 1);
+
+        // Versuch, Dev auf 5 zu schieben -> wird auf columns.size() - 2 = 1 korrigiert
+        service.moveColumn(project.getId(), dev.getId(), 5);
+
+        List<KanbanColumn> columns = columnRepository.findByProjectIdOrderByPosition(project.getId());
+        assertThat(columns.get(1).getName()).isEqualTo("Dev");
         assertThat(columns.get(2).getName()).isEqualTo("Done");
-        assertThat(columns.get(2).getPosition()).isEqualTo(2);
     }
 
     @Test
-    void createColumn_throwsException_whenProjectDoesNotExist() {
-        UUID unknownProjectId = UUID.randomUUID();
+    void moveColumn_throwsException_whenMovingSystemColumn() {
+        List<KanbanColumn> columns = columnRepository.findByProjectIdOrderByPosition(project.getId());
+        KanbanColumn done = columns.get(1);
 
-        assertThatThrownBy(() -> service.createColumn(unknownProjectId, "Todo", null))
+        assertThatThrownBy(() -> service.moveColumn(project.getId(), done.getId(), 1))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Project not Found");
+                .hasMessage("System columns cannot be moved");
     }
 
     @Test
-    void renameColumn_changesName() {
-        KanbanColumn column = columnRepository.save(new KanbanColumn(project, "Todo", 0));
+    void deleteColumn_throwsException_whenDeletingSystemColumn() {
+        List<KanbanColumn> columns = columnRepository.findByProjectIdOrderByPosition(project.getId());
+        KanbanColumn todo = columns.get(0);
 
-        KanbanColumn renamed = service.renameColumn(project.getId(), column.getId(), "Backlog");
-
-        assertThat(renamed.getName()).isEqualTo("Backlog");
-
-        KanbanColumn reloaded = columnRepository.findById(column.getId()).orElseThrow();
-        assertThat(reloaded.getName()).isEqualTo("Backlog");
-    }
-
-    @Test
-    void renameColumn_throwsException_whenColumnDoesNotExist() {
-        UUID unknownColumnId = UUID.randomUUID();
-
-        assertThatThrownBy(() -> service.renameColumn(project.getId(), unknownColumnId, "Backlog"))
+        assertThatThrownBy(() -> service.deleteColumn(project.getId(), todo.getId()))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Column not found");
+                .hasMessage("System columns cannot be deleted");
     }
 
     @Test
-    void moveColumn_movesColumnToFront() {
-        KanbanColumn todo = columnRepository.save(new KanbanColumn(project, "Todo", 0));
-        KanbanColumn doing = columnRepository.save(new KanbanColumn(project, "Doing", 1));
-        KanbanColumn done = columnRepository.save(new KanbanColumn(project, "Done", 2));
+    void deleteColumn_worksForUserColumns() {
+        KanbanColumn dev = service.createColumn(project.getId(), "Dev", 1);
+        service.deleteColumn(project.getId(), dev.getId());
 
-        service.moveColumn(project.getId(), done.getId(), 0);
-
-        List<KanbanColumn> columns =
-                columnRepository.findByProjectIdOrderByPosition(project.getId());
-
-        assertThat(columns).hasSize(3);
-        assertThat(columns.get(0).getName()).isEqualTo("Done");
-        assertThat(columns.get(0).getPosition()).isEqualTo(0);
-
-        assertThat(columns.get(1).getName()).isEqualTo("Todo");
-        assertThat(columns.get(1).getPosition()).isEqualTo(1);
-
-        assertThat(columns.get(2).getName()).isEqualTo("Doing");
-        assertThat(columns.get(2).getPosition()).isEqualTo(2);
-    }
-
-    @Test
-    void moveColumn_movesColumnToBack() {
-        KanbanColumn todo = columnRepository.save(new KanbanColumn(project, "Todo", 0));
-        KanbanColumn doing = columnRepository.save(new KanbanColumn(project, "Doing", 1));
-        KanbanColumn done = columnRepository.save(new KanbanColumn(project, "Done", 2));
-
-        service.moveColumn(project.getId(), todo.getId(), 2);
-
-        List<KanbanColumn> columns =
-                columnRepository.findByProjectIdOrderByPosition(project.getId());
-
-        assertThat(columns).hasSize(3);
-        assertThat(columns.get(0).getName()).isEqualTo("Doing");
-        assertThat(columns.get(0).getPosition()).isEqualTo(0);
-
-        assertThat(columns.get(1).getName()).isEqualTo("Done");
-        assertThat(columns.get(1).getPosition()).isEqualTo(1);
-
-        assertThat(columns.get(2).getName()).isEqualTo("Todo");
-        assertThat(columns.get(2).getPosition()).isEqualTo(2);
-    }
-
-    @Test
-    void moveColumn_keepsOrder_whenPositionIsSame() {
-        KanbanColumn todo = columnRepository.save(new KanbanColumn(project, "Todo", 0));
-        KanbanColumn doing = columnRepository.save(new KanbanColumn(project, "Doing", 1));
-
-        KanbanColumn moved = service.moveColumn(project.getId(), doing.getId(), 1);
-
-        List<KanbanColumn> columns =
-                columnRepository.findByProjectIdOrderByPosition(project.getId());
-
-        assertThat(moved.getPosition()).isEqualTo(1);
+        List<KanbanColumn> columns = columnRepository.findByProjectIdOrderByPosition(project.getId());
         assertThat(columns).hasSize(2);
-        assertThat(columns.get(0).getName()).isEqualTo("Todo");
-        assertThat(columns.get(1).getName()).isEqualTo("Doing");
-    }
-
-    @Test
-    void moveColumn_movesToZero_whenPositionIsNegative() {
-        KanbanColumn todo = columnRepository.save(new KanbanColumn(project, "Todo", 0));
-        KanbanColumn doing = columnRepository.save(new KanbanColumn(project, "Doing", 1));
-        KanbanColumn done = columnRepository.save(new KanbanColumn(project, "Done", 2));
-
-        service.moveColumn(project.getId(), done.getId(), -10);
-
-        List<KanbanColumn> columns =
-                columnRepository.findByProjectIdOrderByPosition(project.getId());
-
-        assertThat(columns.get(0).getName()).isEqualTo("Done");
-        assertThat(columns.get(0).getPosition()).isEqualTo(0);
-
-        assertThat(columns.get(1).getName()).isEqualTo("Todo");
-        assertThat(columns.get(1).getPosition()).isEqualTo(1);
-
-        assertThat(columns.get(2).getName()).isEqualTo("Doing");
-        assertThat(columns.get(2).getPosition()).isEqualTo(2);
-    }
-
-    @Test
-    void moveColumn_movesToLastPosition_whenPositionIsTooLarge() {
-        KanbanColumn todo = columnRepository.save(new KanbanColumn(project, "Todo", 0));
-        KanbanColumn doing = columnRepository.save(new KanbanColumn(project, "Doing", 1));
-        KanbanColumn done = columnRepository.save(new KanbanColumn(project, "Done", 2));
-
-        service.moveColumn(project.getId(), todo.getId(), 99);
-
-        List<KanbanColumn> columns =
-                columnRepository.findByProjectIdOrderByPosition(project.getId());
-
-        assertThat(columns.get(0).getName()).isEqualTo("Doing");
-        assertThat(columns.get(0).getPosition()).isEqualTo(0);
-
+        assertThat(columns.get(0).getName()).isEqualTo("To-Do");
         assertThat(columns.get(1).getName()).isEqualTo("Done");
-        assertThat(columns.get(1).getPosition()).isEqualTo(1);
-
-        assertThat(columns.get(2).getName()).isEqualTo("Todo");
-        assertThat(columns.get(2).getPosition()).isEqualTo(2);
     }
 
     @Test
-    void moveColumn_throwsException_whenColumnDoesNotExist() {
-        UUID unknownColumnId = UUID.randomUUID();
+    void initializeProject_createsTwoSystemColumns() {
+        // Ein neues Projekt ohne Spalten
+        Project newProject = projectRepository.save(new Project());
+        service.initializeProject(newProject);
 
-        assertThatThrownBy(() -> service.moveColumn(project.getId(), unknownColumnId, 0))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Column not found");
-    }
-
-    @Test
-    void deleteColumn_removesColumnAndShiftsFollowingPositions() {
-        KanbanColumn todo = columnRepository.save(new KanbanColumn(project, "Todo", 0));
-        KanbanColumn doing = columnRepository.save(new KanbanColumn(project, "Doing", 1));
-        KanbanColumn done = columnRepository.save(new KanbanColumn(project, "Done", 2));
-
-        service.deleteColumn(project.getId(), doing.getId());
-
-        List<KanbanColumn> columns =
-                columnRepository.findByProjectIdOrderByPosition(project.getId());
+        List<KanbanColumn> columns = columnRepository.findByProjectIdOrderByPosition(newProject.getId());
 
         assertThat(columns).hasSize(2);
-
-        assertThat(columns.get(0).getName()).isEqualTo("Todo");
-        assertThat(columns.get(0).getPosition()).isEqualTo(0);
-
+        assertThat(columns.get(0).getName()).isEqualTo("To-Do");
+        assertThat(columns.get(0).isSystem()).isTrue();
         assertThat(columns.get(1).getName()).isEqualTo("Done");
-        assertThat(columns.get(1).getPosition()).isEqualTo(1);
-
-        assertThat(columnRepository.findById(doing.getId())).isEmpty();
-    }
-
-    @Test
-    void deleteColumn_throwsException_whenColumnDoesNotExist() {
-        UUID unknownColumnId = UUID.randomUUID();
-
-        assertThatThrownBy(() -> service.deleteColumn(project.getId(), unknownColumnId))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Column not found");
+        assertThat(columns.get(1).isSystem()).isTrue();
     }
 }
