@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClient, HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { JwtInterceptor } from './jwt-interceptor';
+import { JwtInterceptor } from '../interceptors/jwt-interceptor';
 
 describe('JwtInterceptor', () => {
   let httpMock: HttpTestingController;

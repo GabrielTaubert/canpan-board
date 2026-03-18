@@ -28,8 +28,6 @@ describe('KanbanColumn', () => {
 
   it('should emit taskDropped event when onDrop is called', () => {
     spyOn(component.taskDropped, 'emit');
-
-    // Mock-Event erstellen (CdkDragDrop Typ simulieren)
     const mockEvent = {
       previousIndex: 0,
       currentIndex: 1,
@@ -38,7 +36,29 @@ describe('KanbanColumn', () => {
     } as unknown as CdkDragDrop<Task[]>;
 
     component.onDrop(mockEvent);
-
     expect(component.taskDropped.emit).toHaveBeenCalledWith(mockEvent);
+  });
+
+  it('should emit addTask event with title when onColumnDblClick is called', () => {
+    spyOn(component.addTask, 'emit');
+    
+    component.onColumnDblClick();
+    
+    expect(component.addTask.emit).toHaveBeenCalledWith('Test Column');
+  });
+
+  it('should emit editTask event and stop propagation when onTaskDblClick is called', () => {
+    spyOn(component.editTask, 'emit');
+    
+    const mockMouseEvent = {
+      stopPropagation: jasmine.createSpy('stopPropagation')
+    } as unknown as MouseEvent;
+    
+    const mockTask = { id: 't1', title: 'Edit Me' } as Task;
+
+    component.onTaskDblClick(mockTask, mockMouseEvent);
+    
+    expect(mockMouseEvent.stopPropagation).toHaveBeenCalled();
+    expect(component.editTask.emit).toHaveBeenCalledWith(mockTask);
   });
 });

@@ -2,12 +2,12 @@ import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-import { AuthResponse } from '../../models/auth.model';
-import { theme } from '../../../theme';
+import { AuthService } from '../../../core/services/auth.service';
+import { AuthResponse } from '../../../core/models/auth.model';
+import { theme } from '../../../../theme';
 
 @Component({
-  selector: 'app-register',
+  selector: 'app-login',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
@@ -18,25 +18,19 @@ import { theme } from '../../../theme';
           <span class="brand-text">CanPan</span>
         </div>
         <div class="hero-text">
-          <h1>Get started</h1>
-          <p>Create your account to get started</p>
+          <h1>Welcome back</h1>
+          <p>Sign in to access your dashboard</p>
         </div>
       </div>
       
       <div class="auth-right">
         <div class="auth-card">
-          <h2>Create account</h2>
-          <p class="subtitle">Fill in your details to register</p>
+          <h2>Sign in</h2>
+          <p class="subtitle">Enter your credentials to continue</p>
           
           @if (error()) {
             <div class="alert alert-error">
               {{ error() }}
-            </div>
-          }
-
-          @if (success()) {
-            <div class="alert alert-success">
-              Account created! Redirecting to login...
             </div>
           }
 
@@ -62,30 +56,17 @@ import { theme } from '../../../theme';
                 [(ngModel)]="password" 
                 name="password"
                 required
-                minlength="6"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="confirmPassword">Confirm password</label>
-              <input 
-                type="password" 
-                id="confirmPassword" 
-                [(ngModel)]="confirmPassword" 
-                name="confirmPassword"
-                required
                 placeholder="••••••••"
               />
             </div>
 
             <button type="submit" [disabled]="loading()" class="btn-primary">
-              {{ loading() ? 'Creating account...' : 'Create account' }}
+              {{ loading() ? 'Signing in...' : 'Sign in' }}
             </button>
           </form>
 
           <p class="auth-footer">
-            Already have an account? <a routerLink="/login">Sign in</a>
+            Don't have an account? <a routerLink="/register">Create one</a>
           </p>
         </div>
       </div>
@@ -104,7 +85,7 @@ import { theme } from '../../../theme';
     }
 
     .auth-left {
-      background: linear-gradient(135deg, #40E0D0 0%, #40E0D0CC 100%);
+      background: linear-gradient(135deg, #FF8C00 0%, #FFB347 100%);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -182,12 +163,6 @@ import { theme } from '../../../theme';
       border: 1px solid #FECACA;
     }
 
-    .alert-success {
-      background: #F0FDF4;
-      color: #16A34A;
-      border: 1px solid #BBF7D0;
-    }
-
     .form-group {
       margin-bottom: 1.25rem;
     }
@@ -213,8 +188,8 @@ import { theme } from '../../../theme';
 
     input:focus {
       outline: none;
-      border-color: #40E0D0;
-      box-shadow: 0 0 0 3px rgba(64, 224, 208, 0.15);
+      border-color: #FF8C00;
+      box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.1);
     }
 
     input::placeholder {
@@ -224,7 +199,7 @@ import { theme } from '../../../theme';
     .btn-primary {
       width: 100%;
       padding: 0.875rem;
-      background: #40E0D0;
+      background: #FF8C00;
       color: white;
       border: none;
       border-radius: 8px;
@@ -236,7 +211,7 @@ import { theme } from '../../../theme';
     }
 
     .btn-primary:hover:not(:disabled) {
-      background: #3BC7B8;
+      background: #E67E00;
       transform: translateY(-1px);
     }
 
@@ -253,7 +228,7 @@ import { theme } from '../../../theme';
     }
 
     .auth-footer a {
-      color: #40E0D0;
+      color: #FF8C00;
       text-decoration: none;
       font-weight: 500;
     }
@@ -273,15 +248,13 @@ import { theme } from '../../../theme';
     }
   `]
 })
-export class RegisterComponent {
+export class LoginComponent {
   theme = theme;
   email = '';
   password = '';
-  confirmPassword = '';
   
   loading = signal(false);
   error = signal<string | null>(null);
-  success = signal(false);
 
   constructor(
     private authService: AuthService,
@@ -289,37 +262,21 @@ export class RegisterComponent {
   ) {}
 
   onSubmit(): void {
-    this.error.set(null);
-    this.success.set(false);
-
-    if (!this.email || !this.password || !this.confirmPassword) {
-      this.error.set('Please fill in all fields');
-      return;
-    }
-
-    if (this.password !== this.confirmPassword) {
-      this.error.set('Passwords do not match');
-      return;
-    }
-
-    if (this.password.length < 6) {
-      this.error.set('Password must be at least 6 characters');
+    if (!this.email || !this.password) {
+      this.error.set('Please enter email and password');
       return;
     }
 
     this.loading.set(true);
+    this.error.set(null);
 
-    this.authService.register({ email: this.email, password: this.password }).subscribe({
+    this.authService.login({ email: this.email, password: this.password }).subscribe({
       next: (_response: AuthResponse) => {
-        this.loading.set(false);
-        this.success.set(true);
-        setTimeout(() => {
-          this.router.navigate(['/login']);
-        }, 2000);
+        this.router.navigate(['/projects']);
       },
       error: (err: { error?: { message?: string } }) => {
         this.loading.set(false);
-        this.error.set(err.error?.message || 'Registration failed. Please try again.');
+        this.error.set(err.error?.message || 'Invalid email or password');
       }
     });
   }

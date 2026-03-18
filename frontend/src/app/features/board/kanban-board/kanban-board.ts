@@ -4,10 +4,14 @@ import { Task } from '../../../core/models/task-model';
 import { TaskService } from '../../../core/services/task';
 import { ActivatedRoute } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { MatDialog } from '@angular/material/dialog';
+import { TaskDialog } from '../task-dialog/task-dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-kanban-board',
-  imports: [KanbanColumn, DragDropModule],
+  imports: [KanbanColumn, DragDropModule, MatTooltipModule, MatIconModule],
   templateUrl: './kanban-board.html',
   styleUrl: './kanban-board.scss',
 })
@@ -19,7 +23,7 @@ export class KanbanBoard implements OnInit {
 
   projectId: string | null = null;
 
-  constructor(private taskService: TaskService, private route: ActivatedRoute) {}
+  constructor(private taskService: TaskService, private route: ActivatedRoute, private dialog: MatDialog) {}
 
   ngOnInit(): void {
     // Id aus der URL lesen (:id im Routing)
@@ -70,4 +74,47 @@ export class KanbanBoard implements OnInit {
       }
     }
   }
+
+  // Die Funktion zum Öffnen des Dialog Fensters
+  openTaskDialog(task?: Task, status?: 'TODO' | 'IN_PROGRESS' | 'DONE'): void {
+  const dialogRef = this.dialog.open(TaskDialog, {
+    width: '400px',
+    data: { task: task, status: status }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    // Wenn der Dialog abgebrochen wurde (result ist null/undefined)
+    if (!result) return;
+
+    // Logik für DELETE
+    if (result.delete && task) {
+      this.allTasks = this.allTasks.filter(t => t.id !== task.id);
+      console.log('Task gelöscht:', task.id);
+      // Später: this.taskService.deleteTask(task.id).subscribe();
+    } 
+    
+    // Logik für EDIT
+    else if (task) {
+      const index = this.allTasks.findIndex(t => t.id === task.id);
+      if (index !== -1) {
+        this.allTasks[index] = { ...task, ...result }; 
+        console.log('Task aktualisiert:', this.allTasks[index]);
+        // Später: this.taskService.updateTask(this.allTasks[index]).subscribe();
+      }
+    } 
+    
+    // Logik für CREATE
+    else {
+      const newTask: Task = { 
+        ...result, 
+        id: Math.random().toString(36).substring(2, 9),
+        createdAt: new Date() 
+      };
+      this.allTasks.push(newTask);
+      console.log('Neuer Task erstellt:', newTask);
+    }
+
+    this.updateColumnArrays(); // UI in jedem Fall aktualisieren
+  });
+}
 }

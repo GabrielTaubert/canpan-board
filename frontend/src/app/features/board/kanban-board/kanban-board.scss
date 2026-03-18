@@ -1,3 +1,58 @@
+.board-header {
+  display: flex;         /* Macht Text und Icon zu Flex-Partnern */
+  align-items: center;   /* Zentriert beide exakt auf der Mittellinie */
+  gap: 8px;              /* Definiert den Abstand zwischen "Your Board" und dem Icon */
+  padding: 10px 20px;
+
+  h2 {
+    margin: 0;           /* WICHTIG: Überschriften haben oft Abstände, die alles verschieben */
+    font-size: 24px;
+    color: #1f2937;
+  }
+
+  .info-tooltip-icon {
+    color: #94a3b8;      /* Dezentes Grau */
+    cursor: help;        /* Zeigt das Fragezeichen beim Hover */
+    font-size: 20px;     /* Größe anpassen */
+    height: 20px;
+    width: 20px;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #f97316;    /* Dein Orange beim Drüberfahren */
+    }
+}
+
+  h1 {
+    margin: 0;           /* Entfernt Browser-Standard-Abstände */
+    line-height: 1;      /* Verhindert, dass Zeilenhöhe das Icon wegdrückt */
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  .info-icon {
+    width: 24px;         /* Gleicht die Größe an die Schrift an */
+    height: 24px;
+    line-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+
+    mat-icon {
+      font-size: 20px;   /* Icon etwas kleiner als der Button für besseren Look */
+    }
+  }
+}
+
+// Global in styles.scss für schönere Tooltips (optional)
+.custom-tooltip {
+  background-color: #1e293b !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  white-space: pre-line !important; // Damit die Aufzählungspunkte funktionieren
+}
+
 .board-layout {
   display: flex;
   align-items: stretch;
