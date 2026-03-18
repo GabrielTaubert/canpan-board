@@ -6,10 +6,12 @@ import { ActivatedRoute } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { MatDialog } from '@angular/material/dialog';
 import { TaskDialog } from '../task-dialog/task-dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-kanban-board',
-  imports: [KanbanColumn, DragDropModule],
+  imports: [KanbanColumn, DragDropModule, MatTooltipModule, MatIconModule],
   templateUrl: './kanban-board.html',
   styleUrl: './kanban-board.scss',
 })

@@ -43,3 +43,10 @@ body {
 .cdk-drag-animating {
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
+
+.multi-line-tooltip {
+  white-space: pre-line !important; 
+  font-size: 13px !important;
+  padding: 8px 12px !important;
+  line-height: 1.5 !important;
+}
