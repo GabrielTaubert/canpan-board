@@ -7,17 +7,19 @@ describe('TaskDialog', () => {
   let component: TaskDialog;
   let fixture: ComponentFixture<TaskDialog>;
   
-  // Mock für MatDialogRef
-  const mockDialogRef = {
-    close: jasmine.createSpy('close')
-  };
+  // Mock für MatDialogRef - WICHTIG: jasmine.createSpy('close') hier lassen
+  let mockDialogRef: any;
 
   beforeEach(async () => {
+    mockDialogRef = {
+      close: jasmine.createSpy('close')
+    };
+
     await TestBed.configureTestingModule({
-      imports: [TaskDialog, NoopAnimationsModule], // NoopAnimations verhindert Fehler bei Material-Inputs
+      imports: [TaskDialog, NoopAnimationsModule],
       providers: [
         { provide: MatDialogRef, useValue: mockDialogRef },
-        { provide: MAT_DIALOG_DATA, useValue: { status: 'TODO', task: null } } // Mock-Daten für den Constructor
+        { provide: MAT_DIALOG_DATA, useValue: { status: 'TODO', task: null } }
       ]
     })
     .compileComponents();
@@ -41,9 +43,29 @@ describe('TaskDialog', () => {
     expect(mockDialogRef.close).toHaveBeenCalled();
   });
 
-  it('should close the dialog with delete data when onDelete is called', () => {
+  it('should require confirmation before deleting', () => {
+    component.isEditMode = true;
     component.task = { id: 't1', title: 'Test' };
+    
     component.onDelete();
+    
+    expect(component.showConfirmDelete).toBeTrue();
+    expect(mockDialogRef.close).not.toHaveBeenCalled(); // Darf noch nicht schließen!
+  });
+
+  it('should close the dialog with delete data on second onDelete call', () => {
+    component.isEditMode = true;
+    component.task = { id: 't1', title: 'Test' };
+    
+    component.onDelete();
+    component.onDelete();
+    
     expect(mockDialogRef.close).toHaveBeenCalledWith({ delete: true, id: 't1' });
+  });
+
+  it('should reset delete confirmation when resetDelete is called', () => {
+    component.showConfirmDelete = true;
+    component.resetDelete();
+    expect(component.showConfirmDelete).toBeFalse();
   });
 });

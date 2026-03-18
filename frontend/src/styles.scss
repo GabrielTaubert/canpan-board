@@ -1,4 +1,6 @@
 @import '@angular/cdk/overlay-prebuilt.css';
+@import "@angular/material/prebuilt-themes/indigo-pink.css"; 
+// Oder ein anderes: deeppurple-amber, pink-bluegrey, purple-green
 
 $color-primary: #F97316;
 $color-secondary: #14B8A6;
@@ -8,7 +10,6 @@ $color-text-secondary: #4B5563;
 $color-success: #22C55E;
 $color-warning: #F59E0B;
 $color-error: #EF4444;
-
 
 body {
     background-color: #FFFBF5;

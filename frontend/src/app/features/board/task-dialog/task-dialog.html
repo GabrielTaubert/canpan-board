@@ -1,35 +1,91 @@
-<h2 mat-dialog-title>{{ isEditMode ? 'Task bearbeiten' : 'Neuer Task' }}</h2>
+<div class="dialog-header">
+  <h2 mat-dialog-title>
+    {{ isEditMode ? 'Task bearbeiten' : 'Neuen Task erstellen' }}
+  </h2>
+  <button mat-icon-button (click)="onCancel()" class="close-btn">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
 
 <mat-dialog-content>
-  <div class="form-container">
-    <mat-form-field appearance="outline">
-      <mat-label>Titel</mat-label>
-      <input matInput [(ngModel)]="task.title" placeholder="Was ist zu tun?">
+  <div class="form-grid">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Was ist zu tun?</mat-label>
+      <input matInput [(ngModel)]="task.title" placeholder="z.B. API Endpunkt implementieren">
+      <mat-icon matSuffix>edit</mat-icon>
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="outline" class="full-width">
       <mat-label>Priorität</mat-label>
       <mat-select [(ngModel)]="task.priority">
-        <mat-option value="LOW">Niedrig</mat-option>
-        <mat-option value="MEDIUM">Mittel</mat-option>
-        <mat-option value="HIGH">Hoch</mat-option>
+        
+        <mat-select-trigger>
+          <div class="option-wrapper" *ngIf="task.priority">
+            <mat-icon [class.low-prio]="task.priority === 'LOW'"
+                      [class.med-prio]="task.priority === 'MEDIUM'"
+                      [class.high-prio]="task.priority === 'HIGH'">
+              circle
+            </mat-icon>
+            <span>
+              {{ task.priority === 'LOW' ? 'Niedrig' : task.priority === 'MEDIUM' ? 'Mittel' : 'Hoch' }}
+            </span>
+          </div>
+        </mat-select-trigger>
+
+        <mat-option value="LOW">
+          <div class="option-wrapper">
+            <mat-icon class="low-prio">circle</mat-icon> Niedrig
+          </div>
+        </mat-option>
+        <mat-option value="MEDIUM">
+          <div class="option-wrapper">
+            <mat-icon class="med-prio">circle</mat-icon> Mittel
+          </div>
+        </mat-option>
+        <mat-option value="HIGH">
+          <div class="option-wrapper">
+            <mat-icon class="high-prio">circle</mat-icon> Hoch
+          </div>
+        </mat-option>
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Beschreibung</mat-label>
-      <textarea matInput [(ngModel)]="task.description" rows="3"></textarea>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Details & Notizen</mat-label>
+      <textarea matInput [(ngModel)]="task.description" rows="4" placeholder="Beschreibe die Aufgabe näher..."></textarea>
     </mat-form-field>
   </div>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
-  <button *ngIf="isEditMode" mat-button color="warn" (click)="onDelete()">
-    Löschen
-  </button>
-  
-  <span class="spacer"></span> <button mat-button (click)="onCancel()">Abbrechen</button>
-  <button mat-raised-button color="primary" [mat-dialog-close]="task">
-    {{ isEditMode ? 'Speichern' : 'Erstellen' }}
-  </button>
+<mat-dialog-actions>
+  <div class="actions-container">
+    <div class="left-actions">
+      <button *ngIf="isEditMode && !showConfirmDelete" 
+              mat-stroked-button 
+              color="warn" 
+              (click)="onDelete()" 
+              class="delete-btn">
+        <mat-icon>delete_outline</mat-icon> Löschen
+      </button>
+
+      <button *ngIf="showConfirmDelete" 
+              mat-raised-button 
+              color="warn" 
+              (click)="onDelete()" 
+              (mouseleave)="resetDelete()"
+              class="confirm-delete-btn">
+        Wirklich löschen?
+      </button>
+    </div>
+
+    <div class="right-actions">
+      <button mat-raised-button 
+              color="primary" 
+              [mat-dialog-close]="task" 
+              [disabled]="!task.title || showConfirmDelete" 
+              class="save-btn">
+        {{ isEditMode ? 'Änderungen speichern' : 'Task hinzufügen' }}
+      </button>
+    </div>
+  </div>
 </mat-dialog-actions>

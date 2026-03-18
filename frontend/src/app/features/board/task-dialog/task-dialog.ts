@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Task } from '../../../core/models/task-model';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-task-dialog',
@@ -17,7 +18,8 @@ import { Task } from '../../../core/models/task-model';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatButtonModule
+    MatButtonModule,
+    MatIconModule
   ],
   templateUrl: './task-dialog.html',
   styleUrl: './task-dialog.scss',
@@ -25,6 +27,7 @@ import { Task } from '../../../core/models/task-model';
 export class TaskDialog {
   task: Partial<Task>;
   isEditMode: boolean;
+  showConfirmDelete = false;
 
   constructor(
     public dialogRef: MatDialogRef<TaskDialog>,
@@ -39,6 +42,13 @@ export class TaskDialog {
   }
 
   onDelete(): void {
-  this.dialogRef.close({ delete: true, id: this.task.id });
-}
+    if (!this.showConfirmDelete) {
+      this.showConfirmDelete = true;
+    } else {
+      this.dialogRef.close({ delete: true, id: this.task.id });
+    }
+  }
+  resetDelete(): void {
+    this.showConfirmDelete = false;
+  }
 }

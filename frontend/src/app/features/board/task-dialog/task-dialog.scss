@@ -1,0 +1,89 @@
+:host {
+  display: block;
+  width: 100%; 
+  min-width: 350px; 
+  box-sizing: border-box;
+  overflow-x: hidden; 
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; 
+  padding: 20px 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+mat-dialog-content {
+  overflow-x: hidden !important; 
+  margin: 0;
+  padding: 0 24px;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 8px;
+  
+  h2 { margin: 0; font-weight: 600; color: #1f2937; }
+}
+
+.option-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+}
+
+mat-dialog-actions {
+  padding: 16px 0 !important;
+  display: flex;
+  justify-content: space-between;
+}
+
+.full-width { width: 100%; }
+
+.low-prio { color: #2ecc71; }
+.med-prio { color: #ffa500; }
+.high-prio { color: #ff4d4d; }
+
+.actions-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 16px;
+}
+
+.save-btn {
+  padding: 0 24px;
+  font-weight: 500;
+  border-radius: 6px;
+}
+
+.delete-btn {
+  border-color: #ef4444;
+  color: #ef4444;
+  &:hover { background-color: #fef2f2; }
+}
+
+.confirm-delete-btn {
+  background-color: #dc2626 !important; // Ein aggressiveres Rot
+  color: white !important;
+  animation: shake 0.2s ease-in-out; // Kleiner Rüttel-Effekt
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
