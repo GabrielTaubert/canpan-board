@@ -46,5 +46,22 @@
   .navbar-user {
     font-size: 0.9rem;
     opacity: 0.9;
+
+    .logout-btn {
+      color: white;
+      background: transparent;
+      border: 1px solid white;
+      border-radius: 4px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.3s, color 0.3s;
+      outline: none;
+
+      &:hover {
+        background: white;
+        color: #F97216;
+      }
+    }
   }
 }

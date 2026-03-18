@@ -11,7 +11,7 @@ Make sure everything from `/deploy/README` is completed before continuing.
 
 After the initial setup is done, you can start the full project with the following commands:
 
-```bas
+```bash
 supabase start
 docker compose up -d --build
 ```
@@ -57,3 +57,25 @@ docker compose up -d --build
 ```
 
 On Linux, host.docker.internal is mapped inside docker-compose for database access.
+
+## Migration Reset
+
+If you encounter database migration errors or want to reset your local environment to a clean state, follow these steps:
+
+Clean the Maven target folder to ensure no old configurations remain:
+
+```bash
+./mvnw clean compile
+```
+
+Reset the Supabase database. This will drop all tables and re-run migrations:
+
+```bash
+supabase db reset
+```
+
+Rebuild and restart the Docker containers to apply all changes:
+
+```bash
+docker compose up -d --build
+```

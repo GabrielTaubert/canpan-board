@@ -11,7 +11,7 @@ describe('KanbanBoard', () => {
   let fixture: ComponentFixture<KanbanBoard>;
   let dialog: MatDialog;
 
-  const initialMockTasks: Task[] = [
+  const mockTasks: Task[] = [
     { id: '1', title: 'Task 1', status: 'TODO' } as Task,
     { id: '2', title: 'Task 2', status: 'IN_PROGRESS' } as Task
   ];
@@ -32,7 +32,7 @@ describe('KanbanBoard', () => {
         {
           provide: TaskService,
           useValue: {
-            getTasks: () => of(currentMockTasks)
+            getTasks: jasmine.createSpy('getTasks').and.returnValue(of(mockTasks))
           }
         },
         {
@@ -44,9 +44,7 @@ describe('KanbanBoard', () => {
 
     fixture = TestBed.createComponent(KanbanBoard);
     component = fixture.componentInstance;
-    dialog = TestBed.inject(MatDialog);
-    
-    fixture.detectChanges(); 
+    fixture.detectChanges();
   });
 
   it('should create', () => {
@@ -54,18 +52,22 @@ describe('KanbanBoard', () => {
   });
 
   it('should filter tasks by status using getTasksByStatus', async () => {
-    fixture.detectChanges(); 
-    await fixture.whenStable(); 
+    const taskService = TestBed.inject(TaskService);
+    (taskService.getTasks as jasmine.Spy).and.returnValue(of(mockTasks));
+    
+    component.ngOnInit();
+    await fixture.whenStable();
+    fixture.detectChanges();
 
     const todoTasks = component.getTasksByStatus('TODO');
     
-    expect(todoTasks.length).toBeGreaterThan(0);
+    expect(todoTasks.length).toBe(1);
     expect(todoTasks[0].title).toBe('Task 1');
   });
 
   it('should move an item within the same column (handleTaskDrop)', () => {
-    const data = [...component.allTasks]; 
-    
+    component.allTasks = [...mockTasks];
+    const data = [...mockTasks];
     const mockEvent = {
       previousContainer: { data: data },
       container: { data: data },
@@ -80,7 +82,8 @@ describe('KanbanBoard', () => {
   });
 
   it('should transfer an item to a different column (handleTaskDrop)', () => {
-    const sourceData = [component.allTasks[0]]; 
+    component.allTasks = [...mockTasks];
+    const sourceData = [mockTasks[0]];
     const targetData: Task[] = [];
     
     const mockEvent = {
