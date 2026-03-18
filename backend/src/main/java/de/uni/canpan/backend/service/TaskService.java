@@ -1,14 +1,13 @@
 package de.uni.canpan.backend.service;
 
-import de.uni.canpan.backend.dto.MoveTaskRequest;
-import de.uni.canpan.backend.dto.TaskRequest;
-import de.uni.canpan.backend.dto.TaskAttachmentDto;
-import de.uni.canpan.backend.dto.TaskDetailDto;
+import de.uni.canpan.backend.dto.*;
 import de.uni.canpan.backend.model.KanbanColumn;
 import de.uni.canpan.backend.model.Task;
 import de.uni.canpan.backend.model.TaskAttachment;
+import de.uni.canpan.backend.model.TaskComment;
 import de.uni.canpan.backend.repository.KanbanColumnRepository;
 import de.uni.canpan.backend.repository.TaskAttachmentRepository;
+import de.uni.canpan.backend.repository.TaskCommentRepository;
 import de.uni.canpan.backend.repository.TaskRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,13 +21,16 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final TaskAttachmentRepository taskAttachmentRepository;
     private final KanbanColumnRepository columnRepository;
+    private final TaskCommentRepository taskCommentRepository;
 
     public TaskService(TaskRepository taskRepository,
                        TaskAttachmentRepository taskAttachmentRepository,
-                       KanbanColumnRepository columnRepository) {
+                       KanbanColumnRepository columnRepository,
+                       TaskCommentRepository taskCommentRepository) {
         this.taskRepository = taskRepository;
         this.taskAttachmentRepository = taskAttachmentRepository;
         this.columnRepository = columnRepository;
+        this.taskCommentRepository = taskCommentRepository;
     }
 
     @Transactional(readOnly = true)
@@ -83,6 +85,8 @@ public class TaskService {
 
         List<TaskAttachment> attachments = taskAttachmentRepository.findByTaskId(taskId);
 
+        List<TaskComment> comments = taskCommentRepository.findByTaskIdOrderByCreatedAtAsc(taskId);
+
         return new TaskDetailDto(
                 task.getId(),
                 task.getTitle(),
@@ -96,6 +100,9 @@ public class TaskService {
                 task.getUpdatedAt(),
                 attachments.stream()
                         .map(TaskAttachmentDto::from)
+                        .toList(),
+                comments.stream()
+                        .map(TaskCommentDto::from)
                         .toList()
         );
     }
