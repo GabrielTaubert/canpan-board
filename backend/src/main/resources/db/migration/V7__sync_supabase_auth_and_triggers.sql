@@ -1,25 +1,23 @@
--- Create users table for storing user information
 -- This table is linked to Supabase auth.users via the id
+-- Update table structure to include time zones and default values for Supabase compatibility
+ALTER TABLE users
+    ALTER COLUMN created_at SET DATA TYPE TIMESTAMP WITH TIME ZONE,
+    ALTER COLUMN created_at SET DEFAULT NOW(),
+    ALTER COLUMN updated_at SET DATA TYPE TIMESTAMP WITH TIME ZONE,
+    ALTER COLUMN updated_at SET DEFAULT NOW();
 
-CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create index on email for faster lookups
+-- Create index on email for faster lookups if it doesn't exist
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 -- Create function to handle new user creation from auth.users
 CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
+    RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO users (id, email, created_at, updated_at)
     VALUES (NEW.id, NEW.email, NOW(), NOW())
     ON CONFLICT (id) DO UPDATE SET
-        email = EXCLUDED.email,
-        updated_at = NOW();
+                                   email = EXCLUDED.email,
+                                   updated_at = NOW();
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
