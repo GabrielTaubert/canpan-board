@@ -135,4 +135,15 @@ public class TaskService {
 
     }
 
+    @Transactional(readOnly = true)
+    public List<Task> searchTasksInProject(UUID projectId, String searchText) {
+
+        if (searchText == null || searchText.trim().isEmpty()) {
+            // Wenn kein Suchtext da ist, einfach alle (aktiven) Projekt-Tasks zurückgeben
+            return getProjectTasks(projectId);
+        }
+        return taskRepository.searchTasksInProject(projectId, searchText.trim());
+
+    }
+
 }
