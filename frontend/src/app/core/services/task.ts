@@ -22,18 +22,6 @@ export class TaskService {
         attachments: [] 
       },
       { 
-        id: 't2', 
-        kanColuId: 'col-2', // ID für "In Progress"
-        title: 'Board Logik aufteilen', 
-        description: 'Komponenten in Board, Column und Card unterteilen', 
-        status: 'IN_PROGRESS', 
-        priority: 'MEDIUM', 
-        assignedUsers: ['Elias'], 
-        createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 2), // Vor 2 Stunden
-        updatedAt: new Date(now.getTime() - 1000 * 60 * 30), // Vor 30 Min
-        attachments: []
-      },
-      { 
         id: 't3', 
         kanColuId: 'col-1', // ID für "To Do"
         title: 'Drag & Drop implementieren', 

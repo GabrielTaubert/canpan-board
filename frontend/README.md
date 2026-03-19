@@ -55,3 +55,20 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+
+# Easy Angular Development with Docker Container
+
+To test features more easy close the frontend container
+
+```bash
+docker stop uni_frontend
+```
+
+Start Angular with custom proxy
+
+```bash
+ng serve --proxy-config proxy.conf.json
+```
+
+enjoy!
