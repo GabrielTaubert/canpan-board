@@ -1,35 +1,29 @@
 <div class="board-header">
   <h2>Your Board</h2>
-  <mat-icon 
-  class="info-tooltip-icon"
-  matTooltip="• Doppelklick auf Spalte: neuer Task &#10;• Doppelklick auf Karte: Details/Edit"
-  matTooltipClass="multi-line-tooltip">
-  info_outline
-</mat-icon>
+  
+  <div class="header-actions">
+    <mat-icon 
+      class="info-tooltip-icon"
+      matTooltip="• Doppelklick auf Spalte: neuer Task &#10;• Doppelklick auf Karte: Details/Edit"
+      matTooltipClass="multi-line-tooltip">
+      info_outline
+    </mat-icon>
+
+    <button mat-mini-fab color="primary" (click)="openColumnDialog()" matTooltip="Neue Spalte hinzufügen">
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
 </div>
 
 <div class="board-layout" cdkDropListGroup>
   <app-kanban-column
-    title="To Do"
-    [tasks]="todoTasks"
-    (taskDropped)="handleTaskDrop($event, 'TODO')"
-    (addTask)="openTaskDialog(undefined, 'TODO')"
-    (editTask)="openTaskDialog($event)">
-  </app-kanban-column>
-
-  <app-kanban-column
-    title="In Progress"
-    [tasks]="inProgressTasks"
-    (taskDropped)="handleTaskDrop($event, 'IN_PROGRESS')"
-    (addTask)="openTaskDialog(undefined, 'IN_PROGRESS')"
-    (editTask)="openTaskDialog($event)">
-  </app-kanban-column>
-
-  <app-kanban-column
-    title="Done"
-    [tasks]="doneTasks"
-    (taskDropped)="handleTaskDrop($event, 'DONE')"
-    (addTask)="openTaskDialog(undefined, 'DONE')"
-    (editTask)="openTaskDialog($event)">
-  </app-kanban-column>
+    *ngFor="let col of sortedColumns"
+    [title]="col.title"
+    [tasks]="getTasksByStatus(col.id)"
+    [canEdit]="!col.isLocked"
+    (taskDropped)="handleTaskDrop($event, col.id)"
+    (addTask)="openTaskDialog(undefined, col.id)"
+    (editTask)="openTaskDialog($event)"
+    (renameColumn)="openColumnDialog(col)">
+</app-kanban-column>
 </div>

@@ -1,15 +1,33 @@
 <div class="column" (dblclick)="onColumnDblClick()">
-    <h2>{{ title }} ({{ tasks.length }})</h2>
-    <div 
-        class="task-container"
-        cdkDropList
-        [cdkDropListData]="tasks"
-        (cdkDropListDropped)="onDrop($event)">
-        <app-task-card 
-            *ngFor="let t of tasks"
-            [task]="t"
-            cdkDrag
-            (dblclick)="onTaskDblClick(t, $event)">
-        </app-task-card>
+  <div class="column-header">
+    <h2 class="column-title">
+      {{ title }} <span class="task-count">({{ tasks.length }})</span>
+    </h2>
+
+    <div class="column-actions" *ngIf="canEdit">
+      <button mat-icon-button 
+              (click)="renameColumn.emit(); $event.stopPropagation()" 
+              matTooltip="Spalte umbenennen">
+        <mat-icon>edit</mat-icon>
+      </button>
     </div>
+  </div>
+
+  <div 
+    class="task-container"
+    cdkDropList
+    [cdkDropListData]="tasks"
+    (cdkDropListDropped)="onDrop($event)">
+    
+    <app-task-card 
+      *ngFor="let t of tasks"
+      [task]="t"
+      cdkDrag
+      (dblclick)="onTaskDblClick(t, $event)">
+    </app-task-card>
+
+    <div class="empty-placeholder" *ngIf="tasks.length === 0">
+      Keine Tasks vorhanden
+    </div>
+  </div>
 </div>
