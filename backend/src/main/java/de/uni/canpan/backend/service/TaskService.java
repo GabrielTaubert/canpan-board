@@ -5,10 +5,7 @@ import de.uni.canpan.backend.model.KanbanColumn;
 import de.uni.canpan.backend.model.Task;
 import de.uni.canpan.backend.model.TaskAttachment;
 import de.uni.canpan.backend.model.TaskComment;
-import de.uni.canpan.backend.repository.KanbanColumnRepository;
-import de.uni.canpan.backend.repository.TaskAttachmentRepository;
-import de.uni.canpan.backend.repository.TaskCommentRepository;
-import de.uni.canpan.backend.repository.TaskRepository;
+import de.uni.canpan.backend.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,15 +19,18 @@ public class TaskService {
     private final TaskAttachmentRepository taskAttachmentRepository;
     private final KanbanColumnRepository columnRepository;
     private final TaskCommentRepository taskCommentRepository;
+    private final TaskLabelRepository taskLabelRepository;
 
     public TaskService(TaskRepository taskRepository,
                        TaskAttachmentRepository taskAttachmentRepository,
                        KanbanColumnRepository columnRepository,
-                       TaskCommentRepository taskCommentRepository) {
+                       TaskCommentRepository taskCommentRepository,
+                       TaskLabelRepository taskLabelRepository) {
         this.taskRepository = taskRepository;
         this.taskAttachmentRepository = taskAttachmentRepository;
         this.columnRepository = columnRepository;
         this.taskCommentRepository = taskCommentRepository;
+        this.taskLabelRepository = taskLabelRepository;
     }
 
     @Transactional(readOnly = true)
@@ -87,6 +87,10 @@ public class TaskService {
 
         List<TaskComment> comments = taskCommentRepository.findByTaskIdOrderByCreatedAtAsc(taskId);
 
+        TaskLabelDto labelDto = taskLabelRepository.findByTaskId(taskId)
+                .map(TaskLabelDto::from)
+                .orElse(null);
+
         return new TaskDetailDto(
                 task.getId(),
                 task.getTitle(),
@@ -98,6 +102,7 @@ public class TaskService {
                 task.getAssignedTo(),
                 task.getCreatedAt(),
                 task.getUpdatedAt(),
+                labelDto,
                 attachments.stream()
                         .map(TaskAttachmentDto::from)
                         .toList(),
