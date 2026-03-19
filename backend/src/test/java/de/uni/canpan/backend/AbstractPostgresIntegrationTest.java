@@ -1,14 +1,11 @@
 package de.uni.canpan.backend;
 
-import de.uni.canpan.backend.config.TestS3Config;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 @ActiveProfiles("test")
-@Import(TestS3Config.class)
 public abstract class AbstractPostgresIntegrationTest {
 
     static final PostgreSQLContainer<?> postgres;

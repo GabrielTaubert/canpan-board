@@ -33,11 +33,4 @@ jobs:
           cache: maven
 
       - name: Test + Coverage Gate (JaCoCo)
-        run: mvn -B -e -Dsurefire.useFile=false verify
-
-      - name: Upload Surefire Reports on Failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: surefire-reports
-          path: backend/target/surefire-reports/
+        run: mvn -B verify
