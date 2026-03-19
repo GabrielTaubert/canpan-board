@@ -68,4 +68,17 @@ describe('TaskDialog', () => {
     component.resetDelete();
     expect(component.showConfirmDelete).toBeFalse();
   });
+
+  it('should set isEditMode to true and copy task if task is provided (Branch Coverage Zeile 37)', () => {
+    const taskData = { id: 't1', title: 'Existing Task', status: 'DONE' };
+    
+    TestBed.overrideProvider(MAT_DIALOG_DATA, { useValue: { task: taskData } });
+    
+    const editFixture = TestBed.createComponent(TaskDialog);
+    const editComponent = editFixture.componentInstance;
+    
+    expect(editComponent.isEditMode).toBeTrue();
+    expect(editComponent.task.title).toBe('Existing Task');
+    expect(editComponent.task).not.toBe(taskData); // Sicherstellen, dass es eine Kopie ({...}) ist
+  });
 });
