@@ -153,17 +153,15 @@ class TaskServiceTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void getColumnTasks_excludesArchivedTasks() {
-        // Eine aktive Task
+
         taskRepository.save(new Task(column, "Active Task", "...", Task.TaskPriority.LOW, 1, null));
 
-        // Eine archivierte Task
         Task archivedTask = new Task(column, "Archived Task", "...", Task.TaskPriority.LOW, 1, null);
-        archivedTask.setArchived(true); // Das neue Flag setzen
+        archivedTask.setArchived(true);
         taskRepository.save(archivedTask);
 
         List<Task> activeTasks = taskService.getColumnTasks(column.getId());
 
-        // Test: Es darf nur die aktive Task zurückkommen
         assertThat(activeTasks).hasSize(1);
         assertThat(activeTasks.get(0).getTitle()).isEqualTo("Active Task");
     }
@@ -180,5 +178,36 @@ class TaskServiceTest extends AbstractPostgresIntegrationTest {
 
         assertThat(activeTasks).hasSize(1);
         assertThat(activeTasks.get(0).getTitle()).isEqualTo("Active Project Task");
+    }
+
+    @Test
+    void searchTasksInProject_returnsFilteredTasks_includingCaseInsensitive() {
+        taskRepository.save(new Task(column, "Frontend Bugfix", "Fix CSS", Task.TaskPriority.HIGH, 3, null));
+        taskRepository.save(new Task(column, "Backend Refactoring", "Clean Code", Task.TaskPriority.MEDIUM, 5, null));
+
+        // normal search
+        List<Task> results = taskService.searchTasksInProject(project.getId(), "Bugfix");
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getTitle()).isEqualTo("Frontend Bugfix");
+
+        // case insensitive search
+        List<Task> caseResults = taskService.searchTasksInProject(project.getId(), "backend");
+        assertThat(caseResults).hasSize(1);
+        assertThat(caseResults.get(0).getTitle()).isEqualTo("Backend Refactoring");
+    }
+
+    @Test
+    void searchTasksInProject_returnsAllTasks_whenSearchTextIsBlankOrNull() {
+
+        taskRepository.save(new Task(column, "Task 1", "Desc 1", Task.TaskPriority.LOW, 1, null));
+        taskRepository.save(new Task(column, "Task 2", "Desc 2", Task.TaskPriority.LOW, 1, null));
+
+        // search with blank string
+        List<Task> blankResults = taskService.searchTasksInProject(project.getId(), "   ");
+        assertThat(blankResults).hasSize(2);
+
+        //search with null
+        List<Task> nullResults = taskService.searchTasksInProject(project.getId(), null);
+        assertThat(nullResults).hasSize(2);
     }
 }
