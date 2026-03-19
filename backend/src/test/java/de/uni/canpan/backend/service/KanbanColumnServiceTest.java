@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -47,7 +46,8 @@ class KanbanColumnServiceTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void createColumn_insertsBetweenTodoAndDone_whenPositionIsNull() {
-        // Todo (0) und Done (1) existieren bereits. Neue Spalte soll auf Position 1 (zwischen beide).
+        // Todo (0) und Done (1) existieren bereits. Neue Spalte soll auf Position 1
+        // (zwischen beide).
         KanbanColumn created = service.createColumn(project.getId(), "In Progress", null);
 
         List<KanbanColumn> columns = columnRepository.findByProjectIdOrderByPosition(project.getId());
