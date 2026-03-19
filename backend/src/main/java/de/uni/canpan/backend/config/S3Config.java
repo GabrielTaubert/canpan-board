@@ -26,6 +26,7 @@ public class S3Config {
     private String secretKey;
 
     @Bean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
     public S3Client s3Client() {
         AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
 

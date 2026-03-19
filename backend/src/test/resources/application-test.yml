@@ -7,10 +7,19 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   datasource:
     driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
 
 supabase:
   url: http://localhost:54321
   anon-key: test-anon-key
   service-role-key: test-service-role-key
-  flyway:
-    enabled: true
+  jwt-secret: test-jwt-secret-key-that-is-at-least-32-characters-long
+  s3:
+    endpoint: http://localhost:54321/storage/v1/s3
+    region: local
+    access-key: test-access-key
+    secret-key: test-secret-key-that-is-long-enough
+    bucket: test-bucket
+  storage:
+    public-url: http://localhost:54321/storage/v1/object/public/test-bucket/
