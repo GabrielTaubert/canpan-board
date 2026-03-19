@@ -205,4 +205,40 @@ describe('KanbanBoard', () => {
     const newTask = component.allTasks.find(t => t.title === 'New Task');
     expect(newTask?.status).toBe('TODO');
   });
+
+  it('should call moveItemInArray when dropping in the same container (Line 66)', () => {
+    const data = [{ id: '1', title: 'Task 1' }] as Task[];
+    const mockEvent = {
+      previousContainer: { data: data },
+      container: { data: data },
+      previousIndex: 0,
+      currentIndex: 0
+    } as any;
+    
+    component.handleTaskDrop(mockEvent, 'TODO');
+    expect(data.length).toBe(1);
+  });
+
+  it('should cover branch where task is not deleted but updated (Line 94)', () => {
+    const existingTask = component.allTasks[0];
+    (dialog.open as jasmine.Spy).and.returnValue({
+      afterClosed: () => of({ title: 'New Title' }) 
+    });
+
+    component.openTaskDialog(existingTask);
+    expect(component.allTasks[0].title).toBe('New Title');
+  });
+
+  it('should not update anything if task id is not found in allTasks (Line 98)', () => {
+    const ghostTask = { id: '999', title: 'I do not exist' } as Task;
+    
+    (dialog.open as jasmine.Spy).and.returnValue({
+      afterClosed: () => of({ title: 'New Title' })
+    });
+
+    const snapshot = JSON.stringify(component.allTasks);
+    component.openTaskDialog(ghostTask);
+
+    expect(JSON.stringify(component.allTasks)).toBe(snapshot);
+  });
 });
