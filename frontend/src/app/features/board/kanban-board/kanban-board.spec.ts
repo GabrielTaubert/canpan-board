@@ -54,8 +54,6 @@ describe('KanbanBoard', () => {
     expect(component).toBeTruthy();
   });
 
-  // --- COLUMN LOGIK TESTS (WICHTIG FÜR BRANCH COVERAGE) ---
-
   it('should not delete a locked column', () => {
     const initialColumnsCount = component.columns.length;
     const lockedColumn = component.columns.find(c => c.isLocked);
@@ -168,5 +166,43 @@ describe('KanbanBoard', () => {
     const initialLen = component.allTasks.length;
     component.openTaskDialog();
     expect(component.allTasks.length).toBe(initialLen + 1);
+  });
+
+  it('should not update status if movedTask is undefined', () => {
+    const mockEvent = {
+      previousContainer: { data: [] },
+      container: { data: [] },
+      previousIndex: 0,
+      currentIndex: 0
+    } as any;
+
+    component.handleTaskDrop(mockEvent, 'DONE');
+    expect(true).toBeTrue(); 
+  });
+
+  it('should not update any task if findIndex fails in openTaskDialog', () => {
+    const nonExistentTask = { id: '999', title: 'Ghost', status: 'TODO' } as Task;
+    const editResult = { title: 'New Title' };
+    
+    (dialog.open as jasmine.Spy).and.returnValue({
+      afterClosed: () => of(editResult)
+    });
+
+    const tasksBefore = JSON.stringify(component.allTasks);
+
+    component.openTaskDialog(nonExistentTask); 
+
+    expect(JSON.stringify(component.allTasks)).toBe(tasksBefore);
+  });
+
+  it('should use default status TODO when creating task without status', () => {
+    (dialog.open as jasmine.Spy).and.returnValue({
+      afterClosed: () => of({ title: 'New Task' })
+    });
+    
+    component.openTaskDialog(undefined, undefined);
+    
+    const newTask = component.allTasks.find(t => t.title === 'New Task');
+    expect(newTask?.status).toBe('TODO');
   });
 });

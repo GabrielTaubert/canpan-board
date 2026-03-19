@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 import { ProjectOverview } from './project-overview';
 import { ProjectService } from '../../../core/services/project';
 import { Project } from '../../../core/models/project.model';
+import { Router } from '@angular/router';
 
 describe('ProjectOverview', () => {
   let component: ProjectOverview;
@@ -82,5 +83,15 @@ describe('ProjectOverview', () => {
 
     expect(mockProjectService.deleteProject).toHaveBeenCalledWith('1');
     expect(component.projects.find(p => p.id === '1')).toBeUndefined();
+  });
+
+  it('should navigate to project board when openProject is called', () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = spyOn(router, 'navigate');
+
+    const projectId = '123';
+    component.openProject(projectId);
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/project', projectId, 'board']);
   });
 });
