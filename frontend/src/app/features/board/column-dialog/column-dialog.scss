@@ -1,0 +1,96 @@
+:host {
+  display: block;
+  width: 100%; 
+  min-width: 350px; 
+  box-sizing: border-box;
+  overflow-x: hidden; 
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 8px 0 24px; // Oben/Links etwas mehr Padding für den Titel
+  
+  h2 { 
+    margin: 0; 
+    font-weight: 600; 
+    color: #1f2937; 
+  }
+}
+
+mat-dialog-content {
+  overflow-x: hidden !important; 
+  margin: 0;
+  padding: 16px 24px; // Gleichmäßiges Padding für das Input-Feld
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; 
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.full-width { 
+  width: 100%; 
+}
+
+mat-dialog-actions {
+  padding: 8px 0 16px 0 !important;
+}
+
+.actions-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 24px; // Ausrichtung an den Content-Rändern
+}
+
+/* Button Styles */
+.save-btn {
+  padding: 0 24px;
+  font-weight: 500;
+  border-radius: 6px;
+  height: 40px;
+}
+
+.delete-btn {
+  border-color: #ef4444 !important;
+  color: #ef4444 !important;
+  height: 40px;
+  
+  &:hover { 
+    background-color: #fef2f2; 
+  }
+
+  mat-icon {
+    margin-right: 4px;
+  }
+}
+
+.confirm-delete-btn {
+  background-color: #dc2626 !important;
+  color: white !important;
+  height: 40px;
+  animation: shake 0.2s ease-in-out;
+}
+
+/* Hilfreiche Animation für den Delete-Schock-Effekt */
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+
+/* Close Button oben rechts */
+.close-btn {
+  color: #9ca3af;
+  &:hover {
+    color: #4b5563;
+  }
+}

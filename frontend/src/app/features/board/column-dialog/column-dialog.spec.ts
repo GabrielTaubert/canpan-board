@@ -1,59 +1,58 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { TaskDialog } from './task-dialog';
+import { ColumnDialog } from './column-dialog';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 
-describe('TaskDialog', () => {
-  let component: TaskDialog;
-  let fixture: ComponentFixture<TaskDialog>;
+describe('ColumnDialog', () => {
+  let component: ColumnDialog;
+  let fixture: ComponentFixture<ColumnDialog>;
+  
+  // Mock für MatDialogRef
   let mockDialogRef: any;
 
+  // Hilfsfunktion für das Setup, um verschiedene Daten (Edit vs Create) zu testen
   async function setupTest(dialogData: any) {
     mockDialogRef = {
       close: jasmine.createSpy('close')
     };
 
     await TestBed.configureTestingModule({
-      imports: [TaskDialog],
+      imports: [ColumnDialog],
       providers: [
-        provideNoopAnimations(),
+        provideNoopAnimations(), // Verhindert Animations-Fehler
         { provide: MatDialogRef, useValue: mockDialogRef },
         { provide: MAT_DIALOG_DATA, useValue: dialogData }
       ]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(TaskDialog);
+    fixture = TestBed.createComponent(ColumnDialog);
     component = fixture.componentInstance;
     fixture.detectChanges();
   }
 
   describe('Create Mode', () => {
     beforeEach(async () => {
-      await setupTest({ status: 'TODO', task: null });
+      await setupTest({ column: null });
     });
 
     it('should create', () => {
       expect(component).toBeTruthy();
     });
 
-    it('should set isEditMode to false if no task is provided', () => {
+    it('should set isEditMode to false if no column is provided', () => {
       expect(component.isEditMode).toBeFalse();
-      expect(component.task.status).toBe('TODO');
+      expect(component.column.title).toBe('');
     });
   });
 
-  describe('Edit Mode & Delete Logic', () => {
-    const existingTask = { id: 't1', title: 'Test Task', status: 'IN_PROGRESS' };
-
+  describe('Edit Mode & Logic', () => {
     beforeEach(async () => {
-      await setupTest({ task: existingTask });
+      await setupTest({ column: { id: 'c1', title: 'To Do', isLocked: false } });
     });
 
-    it('should set isEditMode to true and copy task if provided', () => {
+    it('should set isEditMode to true if column is provided', () => {
       expect(component.isEditMode).toBeTrue();
-      expect(component.task.title).toBe('Test Task');
-      expect(component.task).not.toBe(existingTask);
+      expect(component.column.title).toBe('To Do');
     });
 
     it('should close the dialog when onCancel is called', () => {
@@ -61,16 +60,22 @@ describe('TaskDialog', () => {
       expect(mockDialogRef.close).toHaveBeenCalled();
     });
 
-    it('should require confirmation before deleting', () => {
+    it('should require confirmation before deleting (Branch 1)', () => {
+      expect(component.showConfirmDelete).toBeFalse();
+      
       component.onDelete();
+      
       expect(component.showConfirmDelete).toBeTrue();
       expect(mockDialogRef.close).not.toHaveBeenCalled();
     });
 
-    it('should close the dialog with delete data on second onDelete call', () => {
-      component.onDelete();
-      component.onDelete();
-      expect(mockDialogRef.close).toHaveBeenCalledWith({ delete: true, id: 't1' });
+    it('should close with delete data on second onDelete call (Branch 2)', () => {
+      // Erster Klick setzt Confirmation
+      component.onDelete(); 
+      // Zweiter Klick führt Löschung aus
+      component.onDelete(); 
+      
+      expect(mockDialogRef.close).toHaveBeenCalledWith({ delete: true, id: 'c1' });
     });
 
     it('should reset delete confirmation when resetDelete is called', () => {

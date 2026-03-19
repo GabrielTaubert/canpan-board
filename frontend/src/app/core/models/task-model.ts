@@ -3,7 +3,7 @@ export interface Task {
     kanColuId: string; // Column Id vom Backend später
     title: string; //Titel vom Task
     description: string; //Beschreibung vom Task
-    status: 'TODO' | 'IN_PROGRESS' | 'DONE'; // State vom Task
+    status: 'TODO' | 'DONE' | (string & {}); // State vom Task
     priority: 'LOW' | 'MEDIUM' | 'HIGH' // Priorität
     assignedUsers: string[];  // IDs der zugewiesenen User
     createdAt: Date; // Wann Task erstellt wurde
