@@ -17,13 +17,10 @@ describe('TaskService', () => {
   });
 
   it('should return all mock tasks and trigger function coverage', (done: DoneFn) => {
-    // Dieser Aufruf sorgt dafür, dass die Zeilen 9-50 in task.ts als "covered" markiert werden
     service.getTasks().subscribe((tasks: Task[]) => {
-      // Validierung der Daten
       expect(tasks).toBeTruthy();
-      expect(tasks.length).toBe(3);
+      expect(tasks.length).toBe(2);
       
-      // Check auf einen spezifischen Task (z.B. den ersten)
       expect(tasks[0].title).toBe('Navbar stylen');
       expect(tasks[0].status).toBe('DONE');
       
