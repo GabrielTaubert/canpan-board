@@ -28,7 +28,7 @@ describe('authInterceptor', () => {
   });
 
   it('should add Authorization header when token exists', () => {
-    localStorage.setItem('token', 'test-token');
+    localStorage.setItem('accessToken', 'test-token');
     const req = new HttpRequest('GET', '/test');
     const mockResponse = new HttpResponse({ status: 200 });
     const next = jasmine.createSpy<HttpHandlerFn>('next').and.returnValue(of(mockResponse));

@@ -13,12 +13,10 @@ class SupabasePropertiesTest {
         properties.setUrl("http://localhost:54321");
         properties.setAnonKey("anon-key");
         properties.setServiceRoleKey("service-role-key");
-        properties.setJwtSecret("jwt-secret");
 
         assertEquals("http://localhost:54321", properties.getUrl());
         assertEquals("anon-key", properties.getAnonKey());
         assertEquals("service-role-key", properties.getServiceRoleKey());
-        assertEquals("jwt-secret", properties.getJwtSecret());
     }
 
     @Test
