@@ -33,7 +33,7 @@ jobs:
           cache: maven
 
       - name: Test + Coverage Gate (JaCoCo)
-        run: mvn -B -e verify
+        run: mvn -B -e -Dsurefire.useFile=false verify
 
       - name: Upload Surefire Reports on Failure
         if: failure()
