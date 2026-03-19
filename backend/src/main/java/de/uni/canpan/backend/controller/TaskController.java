@@ -16,7 +16,7 @@ public class TaskController {
 
     public TaskController (TaskService taskService) {this.taskService = taskService;}
 
-    @GetMapping("/column//{columnId}")
+    @GetMapping("/column/{columnId}")
     public List<TaskSummaryDto> getColumnTasks(@PathVariable UUID columnId) {
         return taskService.getColumnTasks(columnId)
                 .stream()
@@ -25,8 +25,19 @@ public class TaskController {
     }
 
     @GetMapping("/project/{projectId}")
-    public List<TaskSummaryDto> getProjectTasks(@PathVariable UUID projectID) {
-        return taskService.getProjectTasks(projectID)
+    public List<TaskSummaryDto> getProjectTasks(@PathVariable UUID projectId) {
+        return taskService.getProjectTasks(projectId)
+                .stream()
+                .map(TaskSummaryDto::from)
+                .toList();
+    }
+
+    @GetMapping("/project/{projectId}/search")
+    public List<TaskSummaryDto> searchProjectTasks(
+            @PathVariable("projectId") UUID projectId,
+            @RequestParam(value = "query", required = false) String searchText
+    ) {
+        return taskService.searchTasksInProject(projectId, searchText)
                 .stream()
                 .map(TaskSummaryDto::from)
                 .toList();
@@ -37,7 +48,7 @@ public class TaskController {
         return taskService.getTaskDetail(taskId);
     }
 
-    @PostMapping("/{columnId}")
+    @PostMapping("/column/{columnId}")
     public TaskDto createTask(
             @PathVariable UUID columnId,
             @RequestBody TaskRequest request

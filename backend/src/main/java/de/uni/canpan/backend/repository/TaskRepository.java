@@ -32,4 +32,14 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
         AND COALESCE(t.updatedAt, t.createdAt) < :threshold
     """)
     List<Task> findTasksToArchive(@Param("threshold") OffsetDateTime threshold);
+
+    @Query("""
+        SELECT t FROM Task t 
+        WHERE t.column.project.id = :projectId 
+        AND (
+            LOWER(t.title) LIKE LOWER(CONCAT('%', :text, '%')) 
+            OR LOWER(t.description) LIKE LOWER(CONCAT('%', :text, '%'))
+        )
+    """)
+    List<Task> searchTasksInProject(@Param("projectId") UUID projectId, @Param("text") String text);
 }

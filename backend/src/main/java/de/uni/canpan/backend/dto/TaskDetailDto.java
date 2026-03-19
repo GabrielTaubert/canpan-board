@@ -17,5 +17,6 @@ public record TaskDetailDto(
         UUID assignedTo,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
-        List<TaskAttachmentDto> attachments
+        List<TaskAttachmentDto> attachments,
+        List<TaskCommentDto> comments
 ) {}
