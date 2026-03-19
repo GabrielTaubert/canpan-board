@@ -1,1 +1,35 @@
-<p>member-list works!</p>
+<div class="member-list-container">
+  <div class="member-list-header">
+    <h2>Project Members</h2>
+    @if (isOwner) {
+      <button mat-raised-button color="primary" (click)="openAddMemberDialog()">
+        <mat-icon>person_add</mat-icon>
+        Add Member
+      </button>
+    }
+  </div>
+
+  <mat-list>
+    @for (member of members; track member.userId) {
+      <mat-list-item>
+        <span matListItemTitle>{{ member.email }}</span>
+        <div matListItemMeta class="member-actions">
+          <mat-chip [color]="member.role === 'OWNER' ? 'primary' : 'default'" highlighted>
+            {{ member.role }}
+          </mat-chip>
+          @if (isOwner) {
+            <button
+              mat-icon-button
+              (click)="toggleRole(member)"
+              [title]="member.role === 'OWNER' ? 'Demote to Member' : 'Promote to Owner'">
+              <mat-icon>{{ member.role === 'OWNER' ? 'arrow_downward' : 'arrow_upward' }}</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="removeMember(member.userId)" title="Remove Member">
+              <mat-icon>person_remove</mat-icon>
+            </button>
+          }
+        </div>
+      </mat-list-item>
+    }
+  </mat-list>
+</div>

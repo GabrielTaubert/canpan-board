@@ -16,13 +16,8 @@ public class Project {
     @Column
     private String name;
 
-    @ManyToMany
-    @JoinTable(
-        name = "project_members",
-        joinColumns = @JoinColumn(name = "project_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private List<User> members = new ArrayList<>();
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProjectMember> projectMembers = new ArrayList<>();
 
     public Project() {
     }
@@ -43,11 +38,13 @@ public class Project {
         this.name = name;
     }
 
-    public List<User> getMembers() {
-        return members;
+    public List<ProjectMember> getProjectMembers() {
+        return projectMembers;
     }
 
-    public void setMembers(List<User> members) {
-        this.members = members;
+    public List<User> getMembers() {
+        return projectMembers.stream()
+                .map(ProjectMember::getUser)
+                .toList();
     }
 }

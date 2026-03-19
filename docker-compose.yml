@@ -14,6 +14,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_PROFILES_ACTIVE: prod
+
     ports:
       - "8080:8080"
 
