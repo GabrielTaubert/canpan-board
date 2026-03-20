@@ -16,6 +16,6 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="cancel()">Cancel</button>
-  <button mat-raised-button color="primary" (click)="confirm()" [disabled]="!email.trim()">Add</button>
+  <button class="btn-cancel" (click)="cancel()">Cancel</button>
+  <button class="btn-confirm" (click)="confirm()" [disabled]="!email.trim()">Add</button>
 </mat-dialog-actions>

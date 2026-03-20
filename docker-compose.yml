@@ -1,7 +1,17 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: uni_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "54322:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   backend:
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     build:
       context: ./backend
       dockerfile: ../deploy/backend.Dockerfile
@@ -9,12 +19,13 @@ services:
     env_file:
       - .env
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:54322/postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/postgres
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_PROFILES_ACTIVE: prod
-
+    depends_on:
+      - db
     ports:
       - "8080:8080"
 
@@ -27,3 +38,6 @@ services:
       - backend
     ports:
       - "80:80"
+
+volumes:
+  postgres_data:

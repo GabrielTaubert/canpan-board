@@ -2,34 +2,39 @@
   <div class="member-list-header">
     <h2>Project Members</h2>
     @if (isOwner) {
-      <button mat-raised-button color="primary" (click)="openAddMemberDialog()">
+      <button class="btn-add" (click)="openAddMemberDialog()">
         <mat-icon>person_add</mat-icon>
         Add Member
       </button>
     }
   </div>
 
-  <mat-list>
+  <div class="member-grid">
     @for (member of members; track member.userId) {
-      <mat-list-item>
-        <span matListItemTitle>{{ member.email }}</span>
-        <div matListItemMeta class="member-actions">
-          <mat-chip [color]="member.role === 'OWNER' ? 'primary' : 'default'" highlighted>
+      <div class="member-card">
+        <div class="member-info">
+          <div class="member-avatar">{{ member.email[0].toUpperCase() }}</div>
+          <span class="member-email">{{ member.email }}</span>
+        </div>
+        <div class="member-footer">
+          <span class="role-badge" [class.role-owner]="member.role === 'OWNER'">
             {{ member.role }}
-          </mat-chip>
+          </span>
           @if (isOwner) {
-            <button
-              mat-icon-button
-              (click)="toggleRole(member)"
-              [title]="member.role === 'OWNER' ? 'Demote to Member' : 'Promote to Owner'">
-              <mat-icon>{{ member.role === 'OWNER' ? 'arrow_downward' : 'arrow_upward' }}</mat-icon>
-            </button>
-            <button mat-icon-button color="warn" (click)="removeMember(member.userId)" title="Remove Member">
-              <mat-icon>person_remove</mat-icon>
-            </button>
+            <div class="member-actions">
+              <button
+                class="btn-icon"
+                (click)="toggleRole(member)"
+                [title]="member.role === 'OWNER' ? 'Demote to Member' : 'Promote to Owner'">
+                <mat-icon>{{ member.role === 'OWNER' ? 'arrow_downward' : 'arrow_upward' }}</mat-icon>
+              </button>
+              <button class="btn-icon btn-icon-danger" (click)="removeMember(member.userId)" title="Remove Member">
+                <mat-icon>person_remove</mat-icon>
+              </button>
+            </div>
           }
         </div>
-      </mat-list-item>
+      </div>
     }
-  </mat-list>
+  </div>
 </div>

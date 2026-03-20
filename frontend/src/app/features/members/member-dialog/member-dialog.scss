@@ -1,0 +1,50 @@
+.full-width {
+  width: 100%;
+}
+
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 1rem !important;
+}
+
+mat-dialog-actions {
+  gap: 0.5rem;
+  padding-bottom: 0.5rem !important;
+
+  .btn-cancel {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: #f1f5f9;
+    }
+  }
+
+  .btn-confirm {
+    padding: 0.5rem 1.25rem;
+    background-color: #f97216;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover:not(:disabled) {
+      background-color: #e06210;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
