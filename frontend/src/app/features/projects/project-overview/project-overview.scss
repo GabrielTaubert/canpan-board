@@ -99,6 +99,21 @@
       }
     }
 
+    .btn-members {
+      padding: 0.6rem 1rem;
+      background-color: white;
+      color: #f97216;
+      border: 2px solid #f97216;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: #fff7ed;
+      }
+    }
+
     .btn-delete {
       padding: 0.6rem 1rem;
       background-color: white;

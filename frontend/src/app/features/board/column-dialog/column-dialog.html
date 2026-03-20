@@ -1,0 +1,58 @@
+<div class="dialog-header">
+  <h2 mat-dialog-title>
+    {{ isEditMode ? 'Spalte bearbeiten' : 'Neue Spalte erstellen' }}
+  </h2>
+  <button mat-icon-button (click)="onCancel()" class="close-btn">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content>
+  <div class="form-grid">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Spaltenname</mat-label>
+      <input matInput [(ngModel)]="column.title" placeholder="z.B. Review oder Testing" cdkFocusInitial>
+      <mat-icon matSuffix>view_column</mat-icon>
+    </mat-form-field>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-content>
+  <div class="form-grid">
+    <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Spaltenname</mat-label>
+        <input matInput [(ngModel)]="column.title" placeholder="z.B. Review" [disabled]="!!column.isLocked">
+        <mat-icon matSuffix>view_column</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width" *ngIf="!column.isLocked">
+        <mat-label>Position (Reihenfolge)</mat-label>
+        <input matInput type="number" [(ngModel)]="column.position" min="1" max="998">
+        <mat-icon matSuffix>reorder</mat-icon>
+        <mat-hint>1 ist ganz links (nach To Do)</mat-hint>
+    </mat-form-field>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+  <div class="actions-container">
+    <div class="left-actions">
+      <button *ngIf="isEditMode && !column.isLocked && !showConfirmDelete" 
+              mat-stroked-button color="warn" (click)='onDelete()' class="delete-btn">
+        <mat-icon>delete_outline</mat-icon> Löschen
+      </button>
+
+      <button *ngIf="showConfirmDelete" 
+              mat-raised-button color="warn" (click)="onDelete()" (mouseleave)="resetDelete()" class="confirm-delete-btn">
+        Wirklich löschen?
+      </button>
+    </div>
+
+    <div class="right-actions">
+      <button mat-raised-button color="primary" [mat-dialog-close]="column" 
+              [disabled]="!column.title || showConfirmDelete" class="save-btn">
+        {{ isEditMode ? 'Speichern' : 'Spalte erstellen' }}
+      </button>
+    </div>
+  </div>
+</mat-dialog-actions>
