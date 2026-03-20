@@ -20,6 +20,10 @@ export class ProjectService {
     return this.http.post<Project>(this.apiUrl, { name });
   }
 
+  updateProject(id: string, name: string): Observable<Project> {
+    return this.http.patch<Project>(`${this.apiUrl}/${id}`, { name });
+  }
+
   deleteProject(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }

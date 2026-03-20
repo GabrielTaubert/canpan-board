@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProjectService } from '../../../core/services/project';
@@ -8,13 +8,15 @@ import { Project } from '../../../core/models/project.model';
 @Component({
   selector: 'app-project-overview',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DatePipe],
   templateUrl: './project-overview.html',
   styleUrl: './project-overview.scss',
 })
 export class ProjectOverview implements OnInit {
   projects: Project[] = [];
   newProjectName = '';
+  editingProjectId: string | null = null;
+  editingName = '';
 
   constructor(private projectService: ProjectService, private router: Router) {}
 
@@ -33,6 +35,27 @@ export class ProjectOverview implements OnInit {
     this.projectService.createProject(this.newProjectName.trim()).subscribe(() => {
       this.newProjectName = '';
       this.loadProjects();
+    });
+  }
+
+  startEdit(project: Project): void {
+    this.editingProjectId = project.id;
+    this.editingName = project.name;
+  }
+
+  cancelEdit(): void {
+    this.editingProjectId = null;
+    this.editingName = '';
+  }
+
+  saveEdit(id: string): void {
+    if (!this.editingName.trim()) return;
+    this.projectService.updateProject(id, this.editingName.trim()).subscribe(updated => {
+      const index = this.projects.findIndex(p => p.id === id);
+      if (index !== -1) {
+        this.projects[index] = updated;
+      }
+      this.cancelEdit();
     });
   }
 
