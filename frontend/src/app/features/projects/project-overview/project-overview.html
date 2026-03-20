@@ -11,10 +11,32 @@
 
   <div class="project-grid">
     <div *ngFor="let project of projects" class="project-card">
-      <h3 class="project-name">{{ project.name }}</h3>
+      <div class="project-header">
+        <ng-container *ngIf="editingProjectId === project.id; else displayName">
+          <input
+            type="text"
+            [(ngModel)]="editingName"
+            class="project-name-input edit-inline"
+            (keyup.enter)="saveEdit(project.id)"
+            (keyup.escape)="cancelEdit()"
+          />
+          <button (click)="saveEdit(project.id)" class="btn-save">Save</button>
+          <button (click)="cancelEdit()" class="btn-cancel">Cancel</button>
+        </ng-container>
+        <ng-template #displayName>
+          <h3 class="project-name">{{ project.name }}</h3>
+          <button *ngIf="project.isOwner" (click)="startEdit(project)" class="btn-edit" title="Rename project">✎</button>
+        </ng-template>
+      </div>
+
       <div class="project-members">
         <span *ngFor="let member of project.members" class="member-badge">{{ member }}</span>
       </div>
+
+      <div class="project-meta" *ngIf="project.updatedAt">
+        <span class="last-modified">Last modified: {{ project.updatedAt | date:'MMM d, y, h:mm a' }}</span>
+      </div>
+
       <div class="project-actions">
         <button (click)="openProject(project.id)" class="btn-open">Open</button>
         <button (click)="openMembers(project.id)" class="btn-members">Members</button>

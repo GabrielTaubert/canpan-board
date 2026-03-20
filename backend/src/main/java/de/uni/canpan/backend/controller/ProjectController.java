@@ -2,6 +2,7 @@ package de.uni.canpan.backend.controller;
 
 import de.uni.canpan.backend.dto.CreateProjectRequest;
 import de.uni.canpan.backend.dto.ProjectDto;
+import de.uni.canpan.backend.dto.UpdateProjectNameRequest;
 import de.uni.canpan.backend.model.Project;
 import de.uni.canpan.backend.security.UserPrincipal;
 import de.uni.canpan.backend.service.ProjectService;
@@ -26,7 +27,7 @@ public class ProjectController {
     public List<ProjectDto> getProjects(@AuthenticationPrincipal UserPrincipal principal) {
         UUID userId = UUID.fromString(principal.getUserId());
         return projectService.getProjectsForUser(userId).stream()
-                .map(ProjectDto::from)
+                .map(p -> ProjectDto.from(p, userId))
                 .toList();
     }
 
@@ -37,7 +38,18 @@ public class ProjectController {
     ) {
         UUID userId = UUID.fromString(principal.getUserId());
         Project project = projectService.createProject(request.name(), userId);
-        return ProjectDto.from(project);
+        return ProjectDto.from(project, userId);
+    }
+
+    @PatchMapping("/{id}")
+    public ProjectDto updateProjectName(
+            @PathVariable UUID id,
+            @RequestBody UpdateProjectNameRequest request,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        UUID userId = UUID.fromString(principal.getUserId());
+        Project project = projectService.updateProjectName(id, request.name(), userId);
+        return ProjectDto.from(project, userId);
     }
 
     @DeleteMapping("/{id}")

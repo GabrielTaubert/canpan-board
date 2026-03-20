@@ -2,6 +2,8 @@ export interface Project {
   id: string;
   name: string;
   members: string[];
+  updatedAt: string;
+  isOwner: boolean;
 }
 
 export type MemberRole = 'OWNER' | 'MEMBER';

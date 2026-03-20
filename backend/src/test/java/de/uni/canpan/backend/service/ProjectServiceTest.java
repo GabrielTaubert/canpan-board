@@ -1,8 +1,10 @@
 package de.uni.canpan.backend.service;
 
 import de.uni.canpan.backend.AbstractPostgresIntegrationTest;
+import de.uni.canpan.backend.exception.ForbiddenException;
 import de.uni.canpan.backend.model.MemberRole;
 import de.uni.canpan.backend.model.Project;
+import de.uni.canpan.backend.model.ProjectMember;
 import de.uni.canpan.backend.model.User;
 import de.uni.canpan.backend.repository.KanbanColumnRepository;
 import de.uni.canpan.backend.repository.ProjectMemberRepository;
@@ -112,5 +114,40 @@ class ProjectServiceTest extends AbstractPostgresIntegrationTest {
         assertThatThrownBy(() -> projectService.deleteProject(project.getId(), nonMember.getId()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("not a member");
+    }
+
+    @Test
+    void updateProjectName_updatesName_whenOwner() {
+        Project project = projectService.createProject("Old Name", user.getId());
+
+        Project updated = projectService.updateProjectName(project.getId(), "New Name", user.getId());
+
+        assertThat(updated.getName()).isEqualTo("New Name");
+        assertThat(updated.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    void updateProjectName_throwsForbidden_whenNonOwner() {
+        Project project = projectService.createProject("My Project", user.getId());
+        User member = userRepository.save(new User(UUID.randomUUID(), "member@example.com"));
+        projectMemberRepository.save(new ProjectMember(project, member, MemberRole.MEMBER));
+
+        assertThatThrownBy(() -> projectService.updateProjectName(project.getId(), "New Name", member.getId()))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void updateProjectName_throwsException_whenNameIsBlank() {
+        Project project = projectService.createProject("My Project", user.getId());
+
+        assertThatThrownBy(() -> projectService.updateProjectName(project.getId(), "   ", user.getId()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("not be empty");
+    }
+
+    @Test
+    void updateProjectName_throwsForbidden_whenProjectNotFound() {
+        assertThatThrownBy(() -> projectService.updateProjectName(UUID.randomUUID(), "New Name", user.getId()))
+                .isInstanceOf(ForbiddenException.class);
     }
 }

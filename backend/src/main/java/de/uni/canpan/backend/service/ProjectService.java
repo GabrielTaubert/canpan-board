@@ -1,5 +1,7 @@
 package de.uni.canpan.backend.service;
 
+import de.uni.canpan.backend.exception.ForbiddenException;
+import de.uni.canpan.backend.exception.ResourceNotFoundException;
 import de.uni.canpan.backend.model.MemberRole;
 import de.uni.canpan.backend.model.Project;
 import de.uni.canpan.backend.model.ProjectMember;
@@ -56,5 +58,25 @@ public class ProjectService {
             throw new IllegalArgumentException("User is not a member of this project");
         }
         projectRepository.delete(project);
+    }
+
+    @Transactional
+    public Project updateProjectName(UUID projectId, String newName, UUID requestingUserId) {
+        requireOwner(projectId, requestingUserId);
+        if (newName == null || newName.isBlank()) {
+            throw new IllegalArgumentException("Project name must not be empty");
+        }
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+        project.setName(newName.trim());
+        return projectRepository.save(project);
+    }
+
+    private void requireOwner(UUID projectId, UUID userId) {
+        ProjectMember member = projectMemberRepository.findByProjectIdAndUserId(projectId, userId)
+                .orElseThrow(() -> new ForbiddenException("User is not a member of this project"));
+        if (member.getRole() != MemberRole.OWNER) {
+            throw new ForbiddenException("Only project owners can perform this action");
+        }
     }
 }
