@@ -38,7 +38,7 @@ public class TaskLabelService {
     @Transactional
     public void deleteLabel(UUID taskId) {
 
-        TaskLabel label = taskLabelRepository.findById(taskId)
+        TaskLabel label = taskLabelRepository.findByTaskId(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Label not found"));
 
         taskLabelRepository.delete(label);

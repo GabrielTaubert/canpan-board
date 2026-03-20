@@ -30,6 +30,7 @@ public class TaskLabel {
     }
 
     public UUID getId() { return id; }
+    public Task getTask() { return task; }
     public String getLabelText() { return labelText; }
     public void setLabelText(String labelText) { this.labelText = labelText; }
     public String getColor() { return color; }
