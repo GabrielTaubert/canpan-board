@@ -1,1 +1,21 @@
-<p>member-dialog works!</p>
+<h2 mat-dialog-title>Add Member</h2>
+
+<mat-dialog-content>
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Email</mat-label>
+    <input matInput [(ngModel)]="email" placeholder="user@example.com" type="email" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Role</mat-label>
+    <mat-select [(ngModel)]="role">
+      <mat-option value="MEMBER">Member</mat-option>
+      <mat-option value="OWNER">Owner</mat-option>
+    </mat-select>
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button class="btn-cancel" (click)="cancel()">Cancel</button>
+  <button class="btn-confirm" (click)="confirm()" [disabled]="!email.trim()">Add</button>
+</mat-dialog-actions>

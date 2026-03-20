@@ -45,4 +45,8 @@ export class ProjectOverview implements OnInit {
   openProject(id: string): void {
     this.router.navigate(['/project', id, 'board']);
   }
+
+  openMembers(id: string): void {
+    this.router.navigate(['/project', id, 'members']);
+  }
 }
