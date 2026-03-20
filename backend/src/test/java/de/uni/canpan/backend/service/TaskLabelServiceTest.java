@@ -68,7 +68,6 @@ class TaskLabelServiceTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void setLabel_updatesExistingLabel() {
-        // Zuerst ein Label erstellen
         taskLabelRepository.save(new TaskLabel(testTask, "Old Label", "#000000"));
 
         TaskLabelRequest updateRequest = new TaskLabelRequest("Feature", "#00FF00");
@@ -78,7 +77,6 @@ class TaskLabelServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(updatedLabel.getLabelText()).isEqualTo("Feature");
         assertThat(updatedLabel.getColor()).isEqualTo("#00FF00");
 
-        // Sicherstellen, dass nicht ein zweites Label für denselben Task erstellt wurde
         assertThat(taskLabelRepository.count()).isEqualTo(1);
     }
 
@@ -94,13 +92,11 @@ class TaskLabelServiceTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void deleteLabel_removesLabelByTaskId() {
-        // 1. Label für den Test-Task erstellen
+
         taskLabelRepository.save(new TaskLabel(testTask, "High Prio", "#FF0000"));
 
-        // 2. Löschen über die TASK-ID (nicht Label-ID)
         taskLabelService.deleteLabel(testTask.getId());
 
-        // 3. Verifizieren, dass das Label weg ist
         assertThat(taskLabelRepository.findByTaskId(testTask.getId())).isEmpty();
     }
 
