@@ -6,6 +6,8 @@ services:
       context: ./backend
       dockerfile: ../deploy/backend.Dockerfile
     container_name: uni_backend
+    env_file:
+      - .env
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:54322/postgres
       SPRING_DATASOURCE_USERNAME: postgres
