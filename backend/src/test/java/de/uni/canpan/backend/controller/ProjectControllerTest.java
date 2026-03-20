@@ -132,4 +132,78 @@ class ProjectControllerTest extends AbstractPostgresIntegrationTest {
                 .header("Authorization", "Bearer test-token"))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void updateProjectName_returns200_whenOwner() throws Exception {
+        Project project = projectRepository.save(new Project("Old Name"));
+        projectMemberRepository.save(new ProjectMember(project, user, MemberRole.OWNER));
+
+        mockMvc.perform(patch("/api/projects/" + project.getId())
+                .header("Authorization", "Bearer test-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("name", "New Name"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("New Name"));
+    }
+
+    @Test
+    void updateProjectName_returns403_whenNonOwner() throws Exception {
+        User ownerUser = userRepository.save(new User(UUID.randomUUID(), "owner2@example.com"));
+        Project project = projectRepository.save(new Project("Shared Project"));
+        projectMemberRepository.save(new ProjectMember(project, ownerUser, MemberRole.OWNER));
+        projectMemberRepository.save(new ProjectMember(project, user, MemberRole.MEMBER));
+
+        mockMvc.perform(patch("/api/projects/" + project.getId())
+                .header("Authorization", "Bearer test-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("name", "New Name"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updateProjectName_returns403_whenNoToken() throws Exception {
+        Project project = projectRepository.save(new Project("My Project"));
+        projectMemberRepository.save(new ProjectMember(project, user, MemberRole.OWNER));
+
+        mockMvc.perform(patch("/api/projects/" + project.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("name", "New Name"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updateProjectName_returns400_whenNameIsBlank() throws Exception {
+        Project project = projectRepository.save(new Project("My Project"));
+        projectMemberRepository.save(new ProjectMember(project, user, MemberRole.OWNER));
+
+        mockMvc.perform(patch("/api/projects/" + project.getId())
+                .header("Authorization", "Bearer test-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("name", "   "))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getProjects_returnsIsOwnerTrue_whenUserIsOwner() throws Exception {
+        Project project = projectRepository.save(new Project("Owner Project"));
+        projectMemberRepository.save(new ProjectMember(project, user, MemberRole.OWNER));
+
+        mockMvc.perform(get("/api/projects")
+                .header("Authorization", "Bearer test-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].isOwner").value(true));
+    }
+
+    @Test
+    void getProjects_returnsIsOwnerFalse_whenUserIsMember() throws Exception {
+        User ownerUser = userRepository.save(new User(UUID.randomUUID(), "owner3@example.com"));
+        Project project = projectRepository.save(new Project("Shared Project"));
+        projectMemberRepository.save(new ProjectMember(project, ownerUser, MemberRole.OWNER));
+        projectMemberRepository.save(new ProjectMember(project, user, MemberRole.MEMBER));
+
+        mockMvc.perform(get("/api/projects")
+                .header("Authorization", "Bearer test-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].isOwner").value(false));
+    }
 }

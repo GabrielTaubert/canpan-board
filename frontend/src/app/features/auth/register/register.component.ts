@@ -43,39 +43,42 @@ import { theme } from '../../../../theme';
           <form (ngSubmit)="onSubmit()">
             <div class="form-group">
               <label for="email">Email</label>
-              <input 
-                type="email" 
-                id="email" 
-                [(ngModel)]="email" 
+              <input
+                type="email"
+                id="email"
+                [(ngModel)]="email"
                 name="email"
                 required
                 email
                 placeholder="name@company.com"
+                (ngModelChange)="clearError()"
               />
             </div>
 
             <div class="form-group">
               <label for="password">Password</label>
-              <input 
-                type="password" 
-                id="password" 
-                [(ngModel)]="password" 
+              <input
+                type="password"
+                id="password"
+                [(ngModel)]="password"
                 name="password"
                 required
                 minlength="6"
                 placeholder="••••••••"
+                (ngModelChange)="clearError()"
               />
             </div>
 
             <div class="form-group">
               <label for="confirmPassword">Confirm password</label>
-              <input 
-                type="password" 
-                id="confirmPassword" 
-                [(ngModel)]="confirmPassword" 
+              <input
+                type="password"
+                id="confirmPassword"
+                [(ngModel)]="confirmPassword"
                 name="confirmPassword"
                 required
                 placeholder="••••••••"
+                (ngModelChange)="clearError()"
               />
             </div>
 
@@ -288,22 +291,28 @@ export class RegisterComponent {
     private router: Router
   ) {}
 
+  clearError(): void {
+    if (this.error()) {
+      this.error.set(null);
+    }
+  }
+
   onSubmit(): void {
     this.error.set(null);
     this.success.set(false);
 
     if (!this.email || !this.password || !this.confirmPassword) {
-      this.error.set('Please fill in all fields');
+      this.error.set('Please fill in all fields.');
       return;
     }
 
     if (this.password !== this.confirmPassword) {
-      this.error.set('Passwords do not match');
+      this.error.set('Passwords do not match.');
       return;
     }
 
     if (this.password.length < 6) {
-      this.error.set('Password must be at least 6 characters');
+      this.error.set('Password must be at least 6 characters.');
       return;
     }
 
@@ -317,9 +326,20 @@ export class RegisterComponent {
           this.router.navigate(['/login']);
         }, 2000);
       },
-      error: (err: { error?: { message?: string } }) => {
+      error: (err: { status?: number; error?: { message?: string } | string }) => {
         this.loading.set(false);
-        this.error.set(err.error?.message || 'Registration failed. Please try again.');
+        if (err.status === 0) {
+          this.error.set('Could not connect to the server. Please try again.');
+        } else if (err.status === 409) {
+          this.error.set('An account with this email already exists.');
+        } else if (err.status != null && err.status >= 500) {
+          this.error.set('A server error occurred. Please try again later.');
+        } else {
+          const message = typeof err.error === 'string'
+            ? err.error
+            : (err.error as { message?: string })?.message;
+          this.error.set(message || 'Registration failed. Please try again.');
+        }
       }
     });
   }

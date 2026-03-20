@@ -1,6 +1,8 @@
 package de.uni.canpan.backend.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.UpdateTimestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +17,10 @@ public class Project {
 
     @Column
     private String name;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProjectMember> projectMembers = new ArrayList<>();
@@ -36,6 +42,10 @@ public class Project {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
     }
 
     public List<ProjectMember> getProjectMembers() {
