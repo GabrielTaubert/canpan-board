@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { HomeComponent } from './features/auth/home/home.component';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
+import { ProfileComponent } from './features/auth/profile/profile.component';
 import { authGuard } from './core/guards/auth-guard';
 import { MainLayout } from './core/layout/main-layout/main-layout';
 
@@ -39,6 +40,10 @@ export const routes: Routes = [
       {
         path: 'home',
         component: HomeComponent,
+      },
+      {
+        path: 'profile',
+        component: ProfileComponent,
       },
     ],
   },

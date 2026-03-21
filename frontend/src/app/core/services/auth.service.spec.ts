@@ -100,6 +100,24 @@ describe('AuthService', () => {
     expect(service.getToken()).toBeNull();
   });
 
+  it('should call updateProfile API and return updated user', () => {
+    const mockUser = {
+      id: 'user-1',
+      email: 'test@example.com',
+      createdAt: '2024-01-01',
+      displayName: 'John Doe',
+    };
+
+    service.updateProfile('John Doe').subscribe(user => {
+      expect(user.displayName).toBe('John Doe');
+    });
+
+    const req = httpMock.expectOne('/api/auth/profile');
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ displayName: 'John Doe' });
+    req.flush(mockUser);
+  });
+
   it('should load token and user from localStorage on initialization', () => {
     localStorage.setItem('accessToken', 'stored-token');
     localStorage.setItem('user', JSON.stringify({ id: 'stored-user', email: 'stored@test.com' }));
