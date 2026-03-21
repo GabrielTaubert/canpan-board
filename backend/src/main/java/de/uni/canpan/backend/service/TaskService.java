@@ -1,10 +1,7 @@
 package de.uni.canpan.backend.service;
 
 import de.uni.canpan.backend.dto.*;
-import de.uni.canpan.backend.model.KanbanColumn;
-import de.uni.canpan.backend.model.Task;
-import de.uni.canpan.backend.model.TaskAttachment;
-import de.uni.canpan.backend.model.TaskComment;
+import de.uni.canpan.backend.model.*;
 import de.uni.canpan.backend.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,17 +17,20 @@ public class TaskService {
     private final KanbanColumnRepository columnRepository;
     private final TaskCommentRepository taskCommentRepository;
     private final TaskLabelRepository taskLabelRepository;
+    private final UserRepository userRepository;
 
     public TaskService(TaskRepository taskRepository,
                        TaskAttachmentRepository taskAttachmentRepository,
                        KanbanColumnRepository columnRepository,
                        TaskCommentRepository taskCommentRepository,
-                       TaskLabelRepository taskLabelRepository) {
+                       TaskLabelRepository taskLabelRepository,
+                       UserRepository userRepository) {
         this.taskRepository = taskRepository;
         this.taskAttachmentRepository = taskAttachmentRepository;
         this.columnRepository = columnRepository;
         this.taskCommentRepository = taskCommentRepository;
         this.taskLabelRepository = taskLabelRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
@@ -48,13 +48,19 @@ public class TaskService {
         KanbanColumn column = columnRepository.findById(columnId)
                 .orElseThrow(() -> new IllegalArgumentException("Column not found with ID: " + columnId));
 
+        User assignedUser = null;
+        if (request.assignedTo() != null) {
+            assignedUser = userRepository.findById(request.assignedTo())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + request.assignedTo()));
+        }
+
         Task newTask = new Task(
                 column,
                 request.title(),
                 request.description(),
                 request.priority(),
                 request.storypoints(),
-                request.assignedTo()
+                assignedUser
         );
 
         return taskRepository.save(newTask);
@@ -91,6 +97,8 @@ public class TaskService {
                 .map(TaskLabelDto::from)
                 .orElse(null);
 
+        UUID assignedUserId = (task.getAssignedTo() != null) ? task.getAssignedTo().getId() : null;
+
         return new TaskDetailDto(
                 task.getId(),
                 task.getTitle(),
@@ -99,7 +107,7 @@ public class TaskService {
                 task.getColumn().getName(),
                 task.getPriority(),
                 task.getStorypoints(),
-                task.getAssignedTo(),
+                assignedUserId,
                 task.getCreatedAt(),
                 task.getUpdatedAt(),
                 labelDto,
@@ -120,12 +128,18 @@ public class TaskService {
         KanbanColumn column = columnRepository.findById(request.columnId())
                 .orElseThrow(() -> new IllegalArgumentException("Column not found"));
 
+        User assignedUser = null;
+        if (request.assignedTo() != null) {
+            assignedUser = userRepository.findById(request.assignedTo())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        }
+
         task.setTitle(request.title());
         task.setDescription(request.description());
         task.setColumn(column);
         task.setPriority(request.priority());
         task.setStorypoints(request.storypoints());
-        task.setAssignedTo(request.assignedTo());
+        task.setAssignedTo(assignedUser);
 
         return task;
     }

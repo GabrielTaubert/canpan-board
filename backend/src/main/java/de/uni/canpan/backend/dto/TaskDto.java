@@ -2,6 +2,7 @@ package de.uni.canpan.backend.dto;
 
 import de.uni.canpan.backend.model.KanbanColumn;
 import de.uni.canpan.backend.model.Task;
+import de.uni.canpan.backend.model.User;
 
 import java.util.UUID;
 
@@ -11,7 +12,7 @@ public record TaskDto(
         String description,
         Task.TaskPriority priority,
         Integer storypoints,
-        UUID assignedTo
+        User assignedTo
 ) {
     public static TaskDto from(Task task) {
         return new TaskDto(

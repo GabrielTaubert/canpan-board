@@ -5,9 +5,11 @@ import de.uni.canpan.backend.exception.ForbiddenException;
 import de.uni.canpan.backend.exception.ResourceNotFoundException;
 import de.uni.canpan.backend.model.MemberRole;
 import de.uni.canpan.backend.model.ProjectMember;
+import de.uni.canpan.backend.model.Task;
 import de.uni.canpan.backend.model.User;
 import de.uni.canpan.backend.repository.ProjectMemberRepository;
 import de.uni.canpan.backend.repository.ProjectRepository;
+import de.uni.canpan.backend.repository.TaskRepository;
 import de.uni.canpan.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,13 +23,16 @@ public class MemberService {
     private final ProjectMemberRepository projectMemberRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final TaskRepository taskRepository;
 
     public MemberService(ProjectMemberRepository projectMemberRepository,
                          ProjectRepository projectRepository,
-                         UserRepository userRepository) {
+                         UserRepository userRepository,
+                         TaskRepository taskRepository) {
         this.projectMemberRepository = projectMemberRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+        this.taskRepository = taskRepository;
     }
 
     @Transactional(readOnly = true)
@@ -69,6 +74,16 @@ public class MemberService {
         if (target.getRole() == MemberRole.OWNER && countOwners(projectId) <= 1) {
             throw new IllegalArgumentException("Cannot remove the last OWNER of the project");
         }
+
+        //find all task of this user
+        List<Task> memberTasks = taskRepository.findByProjectIdAndAssignedToId(projectId, targetUserId);
+
+        //set all task assigned to this user to null
+        for (Task task : memberTasks) {
+            task.setAssignedTo(null);
+        }
+
+        taskRepository.saveAll(memberTasks);
 
         projectMemberRepository.delete(target);
     }

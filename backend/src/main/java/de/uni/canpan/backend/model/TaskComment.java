@@ -16,8 +16,9 @@ public class TaskComment {
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
 
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
@@ -27,9 +28,9 @@ public class TaskComment {
 
     protected TaskComment() {}
 
-    public TaskComment(Task task, UUID userId, String content) {
+    public TaskComment(Task task, User user, String content) {
         this.task = task;
-        this.userId = userId;
+        this.user = user;
         this.content = content;
     }
 
@@ -40,7 +41,7 @@ public class TaskComment {
 
     public UUID getId() { return id; }
     public Task getTask() { return task; }
-    public UUID getUserId() { return userId; }
+    public User getUser() { return user; }
     public String getContent() { return content; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
 
