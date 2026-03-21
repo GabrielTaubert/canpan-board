@@ -64,6 +64,19 @@ export class AuthService {
     return this.http.get<User>(`${this.API_URL}/auth/me`);
   }
 
+  updateProfile(displayName: string): Observable<User> {
+    return this.http.patch<User>(`${this.API_URL}/auth/profile`, { displayName }).pipe(
+      tap(updated => {
+        const current = this.currentUser();
+        if (current) {
+          const updatedUser = { ...current, displayName: updated.displayName };
+          this.currentUser.set(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+      })
+    );
+  }
+
   private handleAuthSuccess(response: AuthResponse): void {
     localStorage.setItem('accessToken', response.accessToken);
     localStorage.setItem('refreshToken', response.refreshToken);

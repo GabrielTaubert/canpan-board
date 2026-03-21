@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.uni.canpan.backend.config.SupabaseProperties;
 import de.uni.canpan.backend.dto.*;
 import de.uni.canpan.backend.exception.AuthException;
+import de.uni.canpan.backend.exception.ResourceNotFoundException;
 import de.uni.canpan.backend.model.User;
 import de.uni.canpan.backend.repository.UserRepository;
 import org.springframework.http.*;
@@ -128,12 +129,14 @@ public class AuthService {
     public UserResponse getCurrentUser(String userId) {
         User user = userRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new AuthException("User not found"));
+        return UserResponse.from(user);
+    }
 
-        return new UserResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getCreatedAt()
-        );
+    public UserResponse updateProfile(UUID userId, String displayName) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        user.setDisplayName(displayName.trim());
+        return UserResponse.from(userRepository.save(user));
     }
 
     private void saveUserToDatabase(UUID userId, String email) {
