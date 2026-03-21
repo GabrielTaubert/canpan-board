@@ -13,12 +13,13 @@ public record TaskSummaryDto(
         UUID columnId
 ) {
     public static TaskSummaryDto from(Task task) {
+        UUID assignedUserId = (task.getAssignedTo() != null) ? task.getAssignedTo().getId() : null;
         return new TaskSummaryDto(
                 task.getId(),
                 task.getTitle(),
                 task.getPriority(),
                 task.getStorypoints(),
-                task.getAssignedTo(),
+                assignedUserId,
                 task.getColumn().getId()
         );
     }

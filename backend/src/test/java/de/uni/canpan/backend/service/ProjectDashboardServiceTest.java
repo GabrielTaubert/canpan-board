@@ -6,9 +6,11 @@ import de.uni.canpan.backend.dto.UserStoryPointSummaryDto;
 import de.uni.canpan.backend.model.KanbanColumn;
 import de.uni.canpan.backend.model.Project;
 import de.uni.canpan.backend.model.Task;
+import de.uni.canpan.backend.model.User;
 import de.uni.canpan.backend.repository.KanbanColumnRepository;
 import de.uni.canpan.backend.repository.ProjectRepository;
 import de.uni.canpan.backend.repository.TaskRepository;
+import de.uni.canpan.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,16 +36,20 @@ class ProjectDashboardServiceTest extends AbstractPostgresIntegrationTest {
     @Autowired
     private ProjectRepository projectRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     private Project project;
     private KanbanColumn todoColumn;
     private KanbanColumn doneColumn;
-    private final UUID user1 = UUID.randomUUID();
+    private User realUser1;
 
     @BeforeEach
     void setUp() {
         taskRepository.deleteAll();
         columnRepository.deleteAll();
         projectRepository.deleteAll();
+        userRepository.deleteAll();
 
         project = projectRepository.save(new Project());
 
@@ -54,16 +60,21 @@ class ProjectDashboardServiceTest extends AbstractPostgresIntegrationTest {
         doneColumn = new KanbanColumn(project, "Done", 1);
         doneColumn.setSystem(true);
         columnRepository.save(doneColumn);
+
+        realUser1 = new User();
+        realUser1.setId(UUID.randomUUID());
+        realUser1.setEmail("test-user@canpan.de");
+        realUser1 = userRepository.save(realUser1);
     }
 
     @Test
     void getUserStoryPointSummary_returnsCorrectSums_excludingDone() {
-        taskRepository.save(new Task(todoColumn, "Task 1", "...", Task.TaskPriority.MEDIUM, 5, user1));
+        taskRepository.save(new Task(todoColumn, "Task 1", "...", Task.TaskPriority.MEDIUM, 5, realUser1));
 
         // should be ignored
-        taskRepository.save(new Task(doneColumn, "Task 2", "...", Task.TaskPriority.LOW, 10, user1));
+        taskRepository.save(new Task(doneColumn, "Task 2", "...", Task.TaskPriority.LOW, 10, realUser1));
 
-        // tas with non user
+        // task without user
         taskRepository.save(new Task(todoColumn, "Task 3", "...", Task.TaskPriority.HIGH, 3, null));
 
         List<UserStoryPointSummaryDto> summary = dashboardService.getUserStoryPointSummary(project.getId());
@@ -71,7 +82,7 @@ class ProjectDashboardServiceTest extends AbstractPostgresIntegrationTest {
         assertThat(summary).hasSize(2);
 
         UserStoryPointSummaryDto user1Stats = summary.stream()
-                .filter(s -> user1.equals(s.userId()))
+                .filter(s -> realUser1.getId().equals(s.userId())) // Vergleich mit der ID des Objekts
                 .findFirst().orElseThrow();
 
         assertThat(user1Stats.totalStoryPoints()).isEqualTo(5L);

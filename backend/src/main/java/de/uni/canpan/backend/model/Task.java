@@ -40,8 +40,9 @@ public class Task {
     @Column(nullable = false)
     private Integer storypoints;
 
-    @Column(name = "assigned_to")
-    private UUID assignedTo;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_to")
+    private User assignedTo;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
@@ -63,7 +64,7 @@ public class Task {
             String description,
             TaskPriority priority,
             Integer storypoints,
-            UUID assignedTo) {
+            User assignedTo) {
         this.column = column;
         this.title = title;
         this.description = description;
@@ -101,8 +102,8 @@ public class Task {
     public Integer getStorypoints() {return storypoints;}
     public void setStorypoints(Integer storypoints) { this.storypoints = storypoints;}
 
-    public UUID getAssignedTo() { return assignedTo; }
-    public void setAssignedTo(UUID assignedTo) { this.assignedTo = assignedTo; }
+    public User getAssignedTo() { return assignedTo; }
+    public void setAssignedTo(User assignedTo) { this.assignedTo = assignedTo; }
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
 

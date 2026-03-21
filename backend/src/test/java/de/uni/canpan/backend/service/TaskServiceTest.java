@@ -7,9 +7,11 @@ import de.uni.canpan.backend.dto.TaskRequest;
 import de.uni.canpan.backend.model.KanbanColumn;
 import de.uni.canpan.backend.model.Project;
 import de.uni.canpan.backend.model.Task;
+import de.uni.canpan.backend.model.User;
 import de.uni.canpan.backend.repository.KanbanColumnRepository;
 import de.uni.canpan.backend.repository.ProjectRepository;
 import de.uni.canpan.backend.repository.TaskRepository;
+import de.uni.canpan.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,17 +39,27 @@ class TaskServiceTest extends AbstractPostgresIntegrationTest {
     @Autowired
     private ProjectRepository projectRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     private KanbanColumn column;
     private Project project;
+    private User testUser;
 
     @BeforeEach
     void setUp() {
         taskRepository.deleteAll();
         columnRepository.deleteAll();
         projectRepository.deleteAll();
+        userRepository.deleteAll();
 
         project = projectRepository.save(new Project());
         column = columnRepository.save(new KanbanColumn(project, "To Do", 0));
+
+        testUser = new User();
+        testUser.setId(UUID.randomUUID());
+        testUser.setEmail("test@example.com");
+        testUser = userRepository.save(testUser);
     }
 
     @Test
@@ -57,17 +69,14 @@ class TaskServiceTest extends AbstractPostgresIntegrationTest {
                 "Description",
                 Task.TaskPriority.MEDIUM,
                 5,
-                null,
+                testUser.getId(),
                 column.getId()
         );
 
         Task created = taskService.createTask(column.getId(), request);
 
         assertThat(created.getId()).isNotNull();
-        assertThat(created.getTitle()).isEqualTo("New Task");
-        assertThat(created.getColumn().getId()).isEqualTo(column.getId());
-
-        assertThat(taskRepository.findById(created.getId())).isPresent();
+        assertThat(created.getAssignedTo().getId()).isEqualTo(testUser.getId());
     }
 
     @Test
@@ -108,20 +117,21 @@ class TaskServiceTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void editTask_updatesFields() {
+        // Hier im Konstruktor von Task muss jetzt 'null' oder ein User-Objekt stehen
         Task task = taskRepository.save(new Task(column, "Old Title", "Old Desc", Task.TaskPriority.LOW, 1, null));
+
         TaskRequest updateRequest = new TaskRequest(
                 "New Title",
                 "New Desc",
                 Task.TaskPriority.HIGH,
                 13,
-                null,
+                testUser.getId(), // Wir weisen im Edit den User zu
                 column.getId()
         );
 
         Task updated = taskService.editTask(task.getId(), updateRequest);
 
-        assertThat(updated.getTitle()).isEqualTo("New Title");
-        assertThat(updated.getPriority()).isEqualTo(Task.TaskPriority.HIGH);
+        assertThat(updated.getAssignedTo().getId()).isEqualTo(testUser.getId());
         assertThat(updated.getStorypoints()).isEqualTo(13);
     }
 

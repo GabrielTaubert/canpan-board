@@ -12,7 +12,7 @@ import java.util.List;
 public interface TaskRepository extends JpaRepository<Task, UUID> {
     List<Task> findByColumnId(UUID columnId);
 
-    List<Task> findByAssignedTo(UUID assignedTo);
+    List<Task> findByAssignedToId(UUID assignedToId);
 
     List<Task> findByColumnProjectId(UUID projectId);
 
@@ -44,12 +44,15 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
     List<Task> searchTasksInProject(@Param("projectId") UUID projectId, @Param("text") String text);
 
     @Query("""
-    SELECT t.assignedTo, SUM(t.storypoints), COUNT(t)
-    FROM Task t
-    WHERE t.column.project.id = :projectId
-    AND t.archived = false
-    AND NOT (t.column.isSystem = true AND t.column.position > 0)
-    GROUP BY t.assignedTo
-""")
+        SELECT t.assignedTo.id, SUM(t.storypoints), COUNT(t)
+        FROM Task t
+        WHERE t.column.project.id = :projectId
+        AND t.archived = false
+        AND NOT (t.column.isSystem = true AND t.column.position > 0)
+        GROUP BY t.assignedTo.id
+    """)
     List<Object[]> getUserStoryPointRawStats(@Param("projectId") UUID projectId);
+
+    @Query("SELECT t FROM Task t WHERE t.column.project.id = :projectId AND t.assignedTo.id = :userId")
+    List<Task> findByProjectIdAndAssignedToId(@Param("projectId") UUID projectId, @Param("userId") UUID userId);
 }

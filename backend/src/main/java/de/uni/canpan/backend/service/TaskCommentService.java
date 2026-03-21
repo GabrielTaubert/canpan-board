@@ -1,11 +1,12 @@
 package de.uni.canpan.backend.service;
 
-import de.uni.canpan.backend.dto.TaskCommentDto;
 import de.uni.canpan.backend.dto.TaskCommentRequest;
 import de.uni.canpan.backend.model.Task;
 import de.uni.canpan.backend.model.TaskComment;
+import de.uni.canpan.backend.model.User;
 import de.uni.canpan.backend.repository.TaskCommentRepository;
 import de.uni.canpan.backend.repository.TaskRepository;
+import de.uni.canpan.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +17,14 @@ public class TaskCommentService {
 
     private final TaskCommentRepository commentRepository;
     private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
 
-    public TaskCommentService(TaskCommentRepository commentRepository, TaskRepository taskRepository) {
+    public TaskCommentService(TaskCommentRepository commentRepository,
+                              TaskRepository taskRepository,
+                              UserRepository userRepository) {
         this.commentRepository = commentRepository;
         this.taskRepository = taskRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
@@ -27,9 +32,11 @@ public class TaskCommentService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
-        TaskComment comment = new TaskComment(task, request.userId(), request.content());
-        TaskComment savedComment = commentRepository.save(comment);
+        User author = userRepository.findById(request.userId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + request.userId()));
 
-        return savedComment;
+        TaskComment comment = new TaskComment(task, author, request.content());
+
+        return commentRepository.save(comment);
     }
 }
