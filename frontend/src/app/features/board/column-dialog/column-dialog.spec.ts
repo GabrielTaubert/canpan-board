@@ -41,18 +41,18 @@ describe('ColumnDialog', () => {
 
     it('should set isEditMode to false if no column is provided', () => {
       expect(component.isEditMode).toBeFalse();
-      expect(component.column.title).toBe('');
+      expect(component.column.name).toBe('');
     });
   });
 
   describe('Edit Mode & Logic', () => {
     beforeEach(async () => {
-      await setupTest({ column: { id: 'c1', title: 'To Do', isLocked: false } });
+      await setupTest({ column: { id: 'c1', name: 'To Do', isSystem: false } });
     });
 
     it('should set isEditMode to true if column is provided', () => {
       expect(component.isEditMode).toBeTrue();
-      expect(component.column.title).toBe('To Do');
+      expect(component.column.name).toBe('To Do');
     });
 
     it('should close the dialog when onCancel is called', () => {

@@ -18,9 +18,9 @@
 <div class="board-layout" cdkDropListGroup>
   <app-kanban-column
     *ngFor="let col of sortedColumns"
-    [title]="col.title"
+    [title]="col.name"
     [tasks]="getTasksByStatus(col.id)"
-    [canEdit]="!col.isLocked"
+    [canEdit]="!col.isSystem"
     (taskDropped)="handleTaskDrop($event, col.id)"
     (addTask)="openTaskDialog(undefined, col.id)"
     (editTask)="openTaskDialog($event)"

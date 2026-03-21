@@ -11,6 +11,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { Column } from '../../../core/models/column-model';
 import { CommonModule } from '@angular/common';
 import { ColumnDialog } from '../column-dialog/column-dialog';
+import { ColumnService } from '../../../core/services/column.service';
+import { switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-kanban-board',
@@ -20,44 +22,30 @@ import { ColumnDialog } from '../column-dialog/column-dialog';
 })
 export class KanbanBoard implements OnInit {
   allTasks: Task[] = [];
-  columns: Column[] = [
-    { id: 'TODO', title: 'To Do', isLocked: true, position: 0 },
-    { id: 'DONE', title: 'Done', isLocked: true, position: 999 }
-  ];
+  columns: Column[] = [];
 
   projectId: string | null = null;
 
-  constructor(private taskService: TaskService, private route: ActivatedRoute, private dialog: MatDialog) {}
+  constructor(private taskService: TaskService, private route: ActivatedRoute, private dialog: MatDialog, private columnService: ColumnService) {}
 
   ngOnInit(): void {
     this.projectId = this.route.snapshot.paramMap.get('id');
-    this.taskService.getTasks().subscribe((tasks: Task[]) => {
-      this.allTasks = tasks;
+
+    if (this.projectId) {
+    // 1. Spalten laden
+    this.columnService.getColumns(this.projectId).subscribe(cols => {
+      this.columns = cols;
     });
   }
+  }
 
+  // Stellt sicher, dass die Zeilen in richtiger Reihenfolge angezeigt werden
   get sortedColumns(): Column[] {
     return [...this.columns].sort((a, b) => a.position - b.position);
   }
 
   getTasksByStatus(status: string): Task[] {
     return this.allTasks.filter(t => t.status === status);
-  }
-
-  // Diese Methode ist die "Source of Truth" für das Löschen
-  deleteColumn(column: Column): void {
-    if (column.isLocked) return;
-
-    // Tasks retten: Von der gelöschten Spalte nach TODO verschieben
-    this.allTasks = this.allTasks.map(t => {
-      if (t.status === column.id) {
-        return { ...t, status: 'TODO', updatedAt: new Date() };
-      }
-      return t;
-    });
-
-    this.columns = this.columns.filter(c => c.id !== column.id);
-    console.log(`Spalte ${column.title} gelöscht. Tasks wurden nach TODO verschoben.`);
   }
 
   // Um die Gedroppten Tasks zu handeln
@@ -113,41 +101,52 @@ export class KanbanBoard implements OnInit {
   // Öffnet das Spalten Dialog Fenster
   openColumnDialog(column?: Column): void {
     const dialogRef = this.dialog.open(ColumnDialog, {
-      width: '400px',
-      data: { column: column }
-    });
+    width: '400px',
+    data: { column: column }
+  });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (!result) return;
+  dialogRef.afterClosed().subscribe(result => {
+    if (!result || !this.projectId) return;
 
-      if (result.delete && column) {
-        this.deleteColumn(column);
-      } 
-      else if (column) {
-        // Edit Mode
-        const index = this.columns.findIndex(c => c.id === column.id);
-        if (index !== -1) {
-          // Wir übernehmen den Titel UND die neue Position
-          this.columns[index] = { ...column, ...result };
-          this.reorderColumns(); 
-        }
-      } 
-      else {
-        // Create Mode
-        const newCol: Column = {
-          id: Math.random().toString(36).substring(2, 9),
-          title: result.title,
-          isLocked: false,
-          position: result.position || this.columns.length - 1 
-        };
-        this.columns.push(newCol);
-        this.reorderColumns();
+    // Löschen (Delete)
+    if (result.delete && column) {
+      this.columnService.deleteColumn(this.projectId, column.id).subscribe(() => {
+        this.refreshBoard();
+      });
+    } 
+    // Editieren (Patch)
+    else if (column && this.projectId) {
+      const needsRename = result.name !== column.name; 
+      const needsMove = result.position !== column.position;
+
+      if (needsRename && needsMove) {
+        this.columnService.renameColumn(this.projectId, column.id, result.name)
+          .pipe(switchMap(() => this.columnService.moveColumn(this.projectId!, column.id, result.position)))
+          .subscribe(() => this.refreshBoard());
+      } else if (needsRename) {
+        this.columnService.renameColumn(this.projectId, column.id, result.name)
+          .subscribe(() => this.refreshBoard());
+      } else if (needsMove) {
+        this.columnService.moveColumn(this.projectId, column.id, result.position)
+          .subscribe(() => this.refreshBoard());
       }
-    });
+    }
+    // Erstellen (Create)
+    else {
+      this.columnService.createColumn(this.projectId, result.name, result.position || this.columns.length)
+        .subscribe(newCol => {
+          this.refreshBoard();
+        });
+    }
+  });
   }
 
-  // Hilfsfunktion um sicherzustellen, dass keine Lücken/Doppelungen entstehen
-  private reorderColumns(): void {
-    this.columns.sort((a, b) => a.position - b.position);
+  // Alle Spalten bekommen (Get)
+  refreshBoard(): void {
+  if (this.projectId) {
+    this.columnService.getColumns(this.projectId).subscribe(cols => {
+      this.columns = cols;
+    });
   }
+}
 }

@@ -1,6 +1,6 @@
 export interface Column {
     id: string; 
-    title: string;
-    isLocked: boolean;
+    name: string;
+    isSystem: boolean;
     position: number;
 }
