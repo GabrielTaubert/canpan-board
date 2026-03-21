@@ -14,10 +14,11 @@ class UserResponseTest {
         UUID id = UUID.randomUUID();
         LocalDateTime now = LocalDateTime.now();
 
-        UserResponse response = new UserResponse(id, "test@example.com", now);
+        UserResponse response = new UserResponse(id, "test@example.com", null, now);
 
         assertEquals(id, response.getId());
         assertEquals("test@example.com", response.getEmail());
+        assertNull(response.getDisplayName());
         assertEquals(now, response.getCreatedAt());
     }
 

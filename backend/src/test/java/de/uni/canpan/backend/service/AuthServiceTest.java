@@ -6,6 +6,7 @@ import de.uni.canpan.backend.dto.LoginRequest;
 import de.uni.canpan.backend.dto.RegisterRequest;
 import de.uni.canpan.backend.dto.UserResponse;
 import de.uni.canpan.backend.exception.AuthException;
+import de.uni.canpan.backend.exception.ResourceNotFoundException;
 import de.uni.canpan.backend.model.User;
 import de.uni.canpan.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -132,9 +133,43 @@ class AuthServiceTest {
     @Test
     void getCurrentUser_withInvalidUserId_throwsAuthException() {
         UUID userId = UUID.randomUUID();
-        
+
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         assertThrows(AuthException.class, () -> authService.getCurrentUser(userId.toString()));
+    }
+
+    @Test
+    void updateProfile_updatesDisplayName_whenUserExists() {
+        UUID userId = UUID.randomUUID();
+        User user = new User(userId, "test@example.com");
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UserResponse response = authService.updateProfile(userId, "John Doe");
+
+        assertNotNull(response);
+        assertEquals("John Doe", response.getDisplayName());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void updateProfile_trimsWhitespace_fromDisplayName() {
+        UUID userId = UUID.randomUUID();
+        User user = new User(userId, "test@example.com");
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UserResponse response = authService.updateProfile(userId, "  Jane  ");
+
+        assertEquals("Jane", response.getDisplayName());
+    }
+
+    @Test
+    void updateProfile_throwsException_whenUserNotFound() {
+        UUID userId = UUID.randomUUID();
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> authService.updateProfile(userId, "Name"));
     }
 }
