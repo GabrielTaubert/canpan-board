@@ -11,11 +11,11 @@
   <div class="form-grid">
     <mat-form-field appearance="outline" class="full-width">
         <mat-label>Spaltenname</mat-label>
-        <input matInput [(ngModel)]="column.title" placeholder="z.B. Review" [disabled]="!!column.isLocked">
+        <input matInput [(ngModel)]="column.name" placeholder="z.B. Review" [disabled]="!!column.isSystem">
         <mat-icon matSuffix>view_column</mat-icon>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="full-width" *ngIf="!column.isLocked">
+    <mat-form-field appearance="outline" class="full-width" *ngIf="!column.isSystem">
         <mat-label>Position (Reihenfolge)</mat-label>
         <input matInput type="number" [(ngModel)]="column.position" min="1" max="998">
         <mat-icon matSuffix>reorder</mat-icon>
@@ -27,7 +27,7 @@
 <mat-dialog-actions>
   <div class="actions-container">
     <div class="left-actions">
-      <button *ngIf="isEditMode && !column.isLocked && !showConfirmDelete" 
+      <button *ngIf="isEditMode && !column.isSystem && !showConfirmDelete" 
               mat-stroked-button color="warn" (click)='onDelete()' class="delete-btn">
         <mat-icon>delete_outline</mat-icon> Löschen
       </button>
@@ -40,7 +40,7 @@
 
     <div class="right-actions">
       <button mat-raised-button color="primary" [mat-dialog-close]="column" 
-              [disabled]="!column.title || showConfirmDelete" class="save-btn">
+              [disabled]="!column.name || showConfirmDelete" class="save-btn">
         {{ isEditMode ? 'Speichern' : 'Spalte erstellen' }}
       </button>
     </div>

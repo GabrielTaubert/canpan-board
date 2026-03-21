@@ -25,7 +25,7 @@ export class ColumnDialog {
   ) {
     this.isEditMode = !!data.column;
     // Entweder Kopie der bestehenden Spalte oder neues Objekt
-    this.column = data.column ? { ...data.column } : { title: '', isLocked: false };
+    this.column = data.column ? { ...data.column } : { name: '', isSystem: false };
   }
 
   onCancel(): void {
