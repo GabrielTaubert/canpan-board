@@ -89,7 +89,6 @@ it('should handle task drop in same container', () => {
     item: { data: data[0] }
   } as any;
 
-  // Wir prüfen nur, ob die Logik fehlerfrei durchläuft
   component.handleTaskDrop(mockEvent, 'TODO');
   expect(true).toBeTrue(); 
 });
