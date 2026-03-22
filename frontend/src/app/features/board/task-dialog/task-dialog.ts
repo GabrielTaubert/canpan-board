@@ -6,7 +6,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { Task } from '../../../core/models/task-model';
+import { Task, TaskAttachment } from '../../../core/models/task-model';
 import { MatIconModule } from '@angular/material/icon';
 import { TaskService } from '../../../core/services/task.service';
 import { Observable, switchMap, take } from 'rxjs';
@@ -14,6 +14,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatCardModule } from '@angular/material/card';
 import { MatSpinner } from '@angular/material/progress-spinner';
+import { StorageService } from '../../../core/services/storage.service';
 
 @Component({
   selector: 'app-task-dialog',
@@ -45,7 +46,8 @@ export class TaskDialog {
     public dialogRef: MatDialogRef<TaskDialog>,
     @Inject(MAT_DIALOG_DATA) public data: { task?: Task, columnId: string },
     private taskService: TaskService,
-    private authService: AuthService
+    private authService: AuthService,
+    private storageService: StorageService
   ) {
     this.isEditMode = !!data.task;
     // Basis-Daten übernehmen
@@ -114,4 +116,56 @@ export class TaskDialog {
       error: (err) => console.error('Kommentar konnte nicht gesendet werden:', err)
     });
   }
+
+  // Attachments
+  async onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    if (!file || !this.task.id) return;
+
+    this.isLoadingDetails = true;
+
+    try {
+      // 1. Datei zu Supabase hochladen
+      const publicUrl = await this.storageService.uploadFile(file, this.task.id);
+      console.log('Erfolgreich hochgeladen! URL:', publicUrl);
+
+      // 2. Dem Java-Backend Bescheid geben (morgen!)
+      /* this.taskService.addAttachmentUrl(this.task.id, file.name, publicUrl).subscribe({
+        next: (newAttachment) => {
+           this.task.attachments?.push(newAttachment);
+           this.isLoadingDetails = false;
+        },
+        error: () => this.isLoadingDetails = false
+      });
+      */
+      
+      // Für heute zum Testen: Einfach lokal anzeigen
+      if (!this.task.attachments) this.task.attachments = [];
+      this.task.attachments.push({ id: 'temp-id', fileName: file.name, fileUrl: publicUrl });
+      this.isLoadingDetails = false;
+
+    } catch (err: any) {
+      alert('Fehler beim Upload: ' + err.message);
+      this.isLoadingDetails = false;
+    }
+  }
+
+  deleteAttachment(attachment: TaskAttachment): void {
+  if (!this.task.id) return;
+
+  this.taskService.deleteAttachment(attachment.id).subscribe({
+    next: async () => {
+      try {
+        await this.storageService.deleteFile(attachment.fileUrl);
+        
+        this.task.attachments = this.task.attachments?.filter(a => a.id !== attachment.id);
+      } catch (err) {
+        // Auch wenn S3 fehlschlägt, ist der DB-Eintrag weg, 
+        // also wird er auch entfernt
+        this.task.attachments = this.task.attachments?.filter(a => a.id !== attachment.id);
+      }
+    },
+    error: (err) => console.error('Konnte Datenbankeintrag nicht löschen', err)
+  });
+}
 }

@@ -54,7 +54,8 @@
         <div *ngFor="let file of task.attachments" class="file-item">
           <mat-icon>insert_drive_file</mat-icon>
           <a [href]="file.fileUrl" target="_blank">{{ file.fileName }}</a>
-          <button mat-icon-button color="warn" (click)="deleteAttachment(file.id)">
+          
+          <button mat-icon-button color="warn" (click)="deleteAttachment(file)">
             <mat-icon>delete_outline</mat-icon>
           </button>
         </div>

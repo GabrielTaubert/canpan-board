@@ -4,7 +4,7 @@ export interface Task {
   description: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
   storypoints?: number;
-  columnId?: string;    // Wichtig für den Move-Request
+  columnId: string;    // Wichtig für den Move-Request
   assignedTo?: any;     // Später ein User-Objekt
   
   // Diese Felder kommen nur im DetailDto vor:

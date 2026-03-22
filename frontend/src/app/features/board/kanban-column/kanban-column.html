@@ -16,6 +16,7 @@
   <div 
     class="task-container"
     cdkDropList
+    [id]="columnId" 
     [cdkDropListData]="tasks"
     (cdkDropListDropped)="onDrop($event)">
     
@@ -23,7 +24,11 @@
       *ngFor="let t of tasks"
       [task]="t"
       cdkDrag
+      [cdkDragData]="t" 
       (dblclick)="onTaskDblClick(t, $event)">
+      
+      <div class="task-placeholder" *cdkDragPlaceholder></div>
+      
     </app-task-card>
 
     <div class="empty-placeholder" *ngIf="tasks.length === 0">

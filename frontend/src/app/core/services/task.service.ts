@@ -57,4 +57,8 @@ export class TaskService {
     formData.append('file', file);
     return this.http.post<any>(`${this.baseUrl}/${taskId}/attachments`, formData);
   }
+
+  deleteAttachment(attachmentId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/attachments/${attachmentId}`);
+  }
 }

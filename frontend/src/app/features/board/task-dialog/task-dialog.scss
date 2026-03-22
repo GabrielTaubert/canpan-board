@@ -87,3 +87,16 @@ mat-dialog-actions {
   75% { transform: translateX(-4px); }
   100% { transform: translateX(0); }
 }
+
+.task-container {
+  min-height: 100px;
+  display: block;
+}
+
+.task-placeholder {
+  background: rgba(0, 0, 0, 0.05);
+  border: 2px dashed #ccc;
+  min-height: 80px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}

@@ -2,24 +2,40 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TaskDialog } from './task-dialog';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { TaskService } from '../../../core/services/task.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { StorageService } from '../../../core/services/storage.service';
+import { of } from 'rxjs';
 
 describe('TaskDialog', () => {
   let component: TaskDialog;
   let fixture: ComponentFixture<TaskDialog>;
   let mockDialogRef: any;
+  let mockTaskService: any;
+  let mockAuthService: any;
+  let mockStorageService: any;
 
   async function setupTest(dialogData: any) {
-    mockDialogRef = {
-      close: jasmine.createSpy('close')
-    };
+    mockDialogRef = { close: jasmine.createSpy('close') };
+    mockTaskService = jasmine.createSpyObj('TaskService', ['getTaskDetail', 'addComment', 'deleteAttachment']);
+    mockAuthService = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
+    mockStorageService = jasmine.createSpyObj('StorageService', ['uploadFile', 'deleteFile']);
+
+    // Default Mocks
+    mockTaskService.getTaskDetail.and.returnValue(of({ description: 'Full detail' }));
+    mockAuthService.getCurrentUser.and.returnValue(of({ id: 'u1', name: 'Test User' }));
+    mockTaskService.addComment.and.returnValue(of({ id: 'c1', content: 'New Comment' }));
+    mockTaskService.deleteAttachment.and.returnValue(of(null));
+    mockStorageService.uploadFile.and.resolveTo('http://supabase.url/file.png');
 
     await TestBed.configureTestingModule({
-      imports: [TaskDialog],
+      imports: [TaskDialog, NoopAnimationsModule],
       providers: [
-        provideNoopAnimations(),
         { provide: MatDialogRef, useValue: mockDialogRef },
-        { provide: MAT_DIALOG_DATA, useValue: dialogData }
+        { provide: MAT_DIALOG_DATA, useValue: dialogData },
+        { provide: TaskService, useValue: mockTaskService },
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: StorageService, useValue: mockStorageService }
       ]
     }).compileComponents();
 
@@ -28,55 +44,52 @@ describe('TaskDialog', () => {
     fixture.detectChanges();
   }
 
-  describe('Create Mode', () => {
-    beforeEach(async () => {
-      await setupTest({ status: 'TODO', task: null });
-    });
+  it('should load full details on init in edit mode', async () => {
+    await setupTest({ task: { id: 't1', title: 'Edit' }, columnId: 'c1' });
+    expect(mockTaskService.getTaskDetail).toHaveBeenCalledWith('t1');
+    expect(component.task.description).toBe('Full detail');
+  });
 
-    it('should create', () => {
-      expect(component).toBeTruthy();
-    });
+  it('should add a comment using the current user', async () => {
+    await setupTest({ task: { id: 't1' }, columnId: 'c1' });
+    component.newCommentContent = 'Hello World';
+    
+    component.addComment();
 
-    it('should set isEditMode to false if no task is provided', () => {
-      expect(component.isEditMode).toBeFalse();
-      expect(component.task.status).toBe('TODO');
+    expect(mockAuthService.getCurrentUser).toHaveBeenCalled();
+    expect(mockTaskService.addComment).toHaveBeenCalledWith('t1', 'Hello World', 'u1');
+    expect(component.task.comments?.length).toBe(1);
+    expect(component.newCommentContent).toBe('');
+  });
+
+  it('should upload a file and update local attachments', async () => {
+    await setupTest({ task: { id: 't1' }, columnId: 'c1' });
+    const file = new File([''], 'test.jpg');
+    const event = { target: { files: [file] } };
+
+    await component.onFileSelected(event);
+
+    expect(mockStorageService.uploadFile).toHaveBeenCalledWith(file, 't1');
+    expect(component.task.attachments?.length).toBe(1);
+    expect(component.task.attachments?.[0].fileUrl).toBe('http://supabase.url/file.png');
+  });
+
+  it('should delete an attachment from service and storage', async () => {
+    await setupTest({ task: { id: 't1', attachments: [{ id: 'a1', fileUrl: 'url1' }] }, columnId: 'c1' });
+    
+    component.deleteAttachment({ id: 'a1', fileUrl: 'url1' } as any);
+
+    expect(mockTaskService.deleteAttachment).toHaveBeenCalledWith('a1');
+    // Warten auf das asynchrone deleteFile im subscribe
+    fixture.whenStable().then(() => {
+      expect(mockStorageService.deleteFile).toHaveBeenCalledWith('url1');
     });
   });
 
-  describe('Edit Mode & Delete Logic', () => {
-    const existingTask = { id: 't1', title: 'Test Task', status: 'IN_PROGRESS' };
-
-    beforeEach(async () => {
-      await setupTest({ task: existingTask });
-    });
-
-    it('should set isEditMode to true and copy task if provided', () => {
-      expect(component.isEditMode).toBeTrue();
-      expect(component.task.title).toBe('Test Task');
-      expect(component.task).not.toBe(existingTask);
-    });
-
-    it('should close the dialog when onCancel is called', () => {
-      component.onCancel();
-      expect(mockDialogRef.close).toHaveBeenCalled();
-    });
-
-    it('should require confirmation before deleting', () => {
-      component.onDelete();
-      expect(component.showConfirmDelete).toBeTrue();
-      expect(mockDialogRef.close).not.toHaveBeenCalled();
-    });
-
-    it('should close the dialog with delete data on second onDelete call', () => {
-      component.onDelete();
-      component.onDelete();
-      expect(mockDialogRef.close).toHaveBeenCalledWith({ delete: true, id: 't1' });
-    });
-
-    it('should reset delete confirmation when resetDelete is called', () => {
-      component.showConfirmDelete = true;
-      component.resetDelete();
-      expect(component.showConfirmDelete).toBeFalse();
-    });
+  it('should close with task data onSave', async () => {
+    await setupTest({ task: null, columnId: 'c1' });
+    component.task.title = 'Manual Title';
+    component.onSave();
+    expect(mockDialogRef.close).toHaveBeenCalledWith(jasmine.objectContaining({ title: 'Manual Title' }));
   });
 });

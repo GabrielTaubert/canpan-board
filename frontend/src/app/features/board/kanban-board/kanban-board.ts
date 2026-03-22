@@ -26,17 +26,32 @@ export class KanbanBoard implements OnInit {
 
   projectId: string | null = null;
 
-  constructor(private taskService: TaskService, private route: ActivatedRoute, private dialog: MatDialog, private columnService: ColumnService) {}
+  constructor(
+    private taskService: TaskService,
+    private route: ActivatedRoute,
+    private dialog: MatDialog,
+    private columnService: ColumnService
+  ) {}
 
   ngOnInit(): void {
     this.projectId = this.route.snapshot.paramMap.get('id');
 
     if (this.projectId) {
-    // 1. Spalten laden
-    this.columnService.getColumns(this.projectId).subscribe(cols => {
-      this.columns = cols;
-    });
+      this.loadInitialData();
+    }
   }
+
+  // Zum laden der bereits vorhandenen Spalten und Tasks
+  loadInitialData(): void {
+    // 1. Spalten laden
+    this.columnService.getColumns(this.projectId!).subscribe(cols => {
+      this.columns = cols;
+      
+      // 2. Sobald Spalten da sind, alle Tasks laden
+      this.taskService.getProjectTasks(this.projectId!).subscribe(tasks => {
+        this.allTasks = tasks;
+      });
+    });
   }
 
   // Stellt sicher, dass die Zeilen in richtiger Reihenfolge angezeigt werden
@@ -44,28 +59,42 @@ export class KanbanBoard implements OnInit {
     return [...this.columns].sort((a, b) => a.position - b.position);
   }
 
-  getTasksByStatus(status: string): Task[] {
-    return this.allTasks.filter(t => t.status === status);
+  // Um die Tasks einer Spalte zu bekommen
+  getTasksByColumn(columnId: string): Task[] {
+    const filtered = this.allTasks.filter(t => t.columnId === columnId);
+    return filtered;
   }
 
   // Um die Gedroppten Tasks zu handeln
-  handleTaskDrop(event: CdkDragDrop<any[]>, newColumnId: string): void {
+  handleTaskDrop(event: CdkDragDrop<Task[]>, newColumnId: string): void {
+  // 1. Wenn in die gleiche Spalte verschoben wurde:
   if (event.previousContainer === event.container) {
+    // Hier könntest du optional die Sortierung im Backend speichern
     moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-  } else {
-    const task = event.previousContainer.data[event.previousIndex];
-    
-    // Server-Update
+  } 
+  
+  // 2. Wenn in eine andere Spalte verschoben wurde:
+  else {
+    // Hol den Task direkt aus dem Event
+    const task = event.item.data; 
+    const oldColumnId = task.columnId;
+
+    // OPTIMISTISCHES UPDATE: 
+    // Wir ändern die ID lokal sofort, damit der Task in die neue Spalte "rutscht"
+    task.columnId = newColumnId;
+
+    // 3. Server informieren
     this.taskService.moveTask(task.id, newColumnId).subscribe({
       next: () => {
-        transferArrayItem(
-          event.previousContainer.data,
-          event.container.data,
-          event.previousIndex,
-          event.currentIndex
-        );
+        console.log('Task erfolgreich verschoben');
+        // Optional: refreshBoard(), falls das Backend weitere Daten ändert (z.B. updatedAt)
       },
-      error: () => this.refreshBoard()
+      error: (err) => {
+        // ROLLBACK: Wenn der Server nein sagt, schieben wir ihn zurück
+        task.columnId = oldColumnId;
+        console.error('Fehler beim Verschieben:', err);
+        this.refreshBoard(); // Board wieder synchronisieren
+      }
     });
   }
 }
@@ -146,10 +175,14 @@ private launchTaskDialog(task: any, columnId?: string) {
 
   // Alle Spalten bekommen (Get)
   refreshBoard(): void {
-  if (this.projectId) {
-    this.columnService.getColumns(this.projectId).subscribe(cols => {
-      this.columns = cols;
-    });
+    if (this.projectId) {
+      // Lade beides neu, um synchron zu bleiben
+      this.columnService.getColumns(this.projectId).subscribe(cols => {
+        this.columns = cols;
+      });
+      this.taskService.getProjectTasks(this.projectId).subscribe(tasks => {
+        this.allTasks = tasks;
+      });
+    }
   }
-}
 }
