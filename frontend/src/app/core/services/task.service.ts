@@ -39,12 +39,11 @@ export class TaskService {
 
   // --- Comments ---
   addComment(taskId: string, content: string, userId: string): Observable<TaskComment> {
-  const body = {
-    content: content,
-    userId: userId
-  };
-  return this.http.post<TaskComment>(`${this.baseUrl}/${taskId}/comments`, body);
-}
+    return this.http.post<TaskComment>(`${this.baseUrl}/${taskId}/comments`, {
+      content,
+      userId
+    });
+  }
 
   // --- Labels ---
   setLabel(taskId: string, labelRequest: any): Observable<any> {

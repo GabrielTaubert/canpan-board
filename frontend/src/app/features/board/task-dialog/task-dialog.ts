@@ -93,30 +93,48 @@ export class TaskDialog {
   // Comments
 
   addComment(): void {
-    if (!this.newCommentContent.trim() || !this.task.id) return;
+  if (!this.newCommentContent.trim()) return;
 
-    // 1. Wir rufen die Funktion auf: getCurrentUser()
-    // 2. Wir nehmen nur den aktuellen Wert: pipe(take(1))
-    // 3. Wir "switchen" zum Kommentar-Request: switchMap
-    this.authService.getCurrentUser().pipe(
-      take(1), 
-      switchMap(user => {
-        if (!user?.id) throw new Error('Kein User eingeloggt');
-        
-        return this.taskService.addComment(
-          this.task.id!, 
-          this.newCommentContent, 
-          user.id
-        );
-      })
-    ).subscribe({
-      next: (newComment) => {
-        if (!this.task.comments) this.task.comments = [];
-        this.task.comments.push(newComment);
-        this.newCommentContent = '';
-      },
-      error: (err) => console.error('Kommentar konnte nicht gesendet werden:', err)
-    });
+  // TypeScript-Fix für die ID (falls noch nicht drin)
+  if (!this.task.id) {
+    console.error('Task ID fehlt beim Kommentieren.');
+    return;
+  }
+
+  const currentUser = this.authService.user();
+  if (!currentUser) return;
+
+  this.taskService.addComment(this.task.id, this.newCommentContent, currentUser.id).subscribe({
+    next: (savedComment) => {
+
+      this.task.comments = [
+        savedComment,              
+        ...(this.task.comments || []) 
+      ];
+      
+      this.newCommentContent = '';
+      
+      console.log('Kommentar erfolgreich hinzugefügt:', savedComment);
+    },
+    error: (err: any) => console.error('Fehler beim Kommentieren', err)
+  });
+}
+
+  getAvatarColor(name: string | null): string {
+    const safeName = name && name.length > 0 ? name : 'U'; 
+    
+    const colors = ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#009688', '#4caf50'];
+    let hash = 0;
+    for (let i = 0; i < safeName.length; i++) {
+      hash = safeName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+  }
+
+  // Hilfsfunktion, um aus der Email einen Namen zu machen
+  getShortName(email: string | null): string {
+    if (!email) return 'Unbekannter User';
+    return email.split('@')[0]; // Macht aus "test@example.com" -> "test"
   }
 
   // Attachments
