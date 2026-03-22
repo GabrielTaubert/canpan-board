@@ -49,31 +49,31 @@ public class TaskController {
     }
 
     @PostMapping("/column/{columnId}")
-    public TaskDto createTask(
+    public TaskDetailDto createTask(
             @PathVariable UUID columnId,
             @RequestBody TaskRequest request
     ) {
 
         Task task = taskService.createTask(columnId, request);
-        return TaskDto.from(task);
+        return taskService.getTaskDetail(task.getId());
     }
 
     @PutMapping("/{taskId}")
-    public TaskDto editTask(
+    public TaskDetailDto editTask(
             @PathVariable UUID taskId,
             @RequestBody TaskRequest request
     ) {
         Task updatedTask = taskService.editTask(taskId, request);
-        return TaskDto.from(updatedTask);
+        return taskService.getTaskDetail(updatedTask.getId());
     }
 
     @PutMapping("/{taskId}/move")
-    public TaskDto moveTask(
+    public TaskSummaryDto moveTask(
             @PathVariable UUID taskId,
             @RequestBody MoveTaskRequest request
     ) {
         Task movedTask = taskService.moveTask(taskId, request);
-        return TaskDto.from(movedTask);
+        return TaskSummaryDto.from(movedTask);
     }
 
     @DeleteMapping("/{taskId}")
