@@ -12,7 +12,13 @@ public record TaskCommentDto(
         OffsetDateTime createdAt
 ) {
     public static TaskCommentDto from(TaskComment comment) {
+
         String name = comment.getUser().getDisplayName();
+
+        if (name == null || name.isBlank()) {
+            name = comment.getUser().getEmail();
+        }
+
         return new TaskCommentDto(
                 comment.getId(),
                 comment.getUser().getId(),
