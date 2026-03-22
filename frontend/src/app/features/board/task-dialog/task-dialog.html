@@ -1,6 +1,6 @@
 <div class="dialog-header">
   <h2 mat-dialog-title>
-    {{ isEditMode ? 'Task bearbeiten' : 'Neuen Task erstellen' }}
+    {{ isEditMode ? 'Task-Details' : 'Neuen Task erstellen' }}
   </h2>
   <button mat-icon-button (click)="onCancel()" class="close-btn">
     <mat-icon>close</mat-icon>
@@ -18,35 +18,19 @@
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Priorität</mat-label>
       <mat-select [(ngModel)]="task.priority">
-        
         <mat-select-trigger>
           <div class="option-wrapper" *ngIf="task.priority">
             <mat-icon [class.low-prio]="task.priority === 'LOW'"
                       [class.med-prio]="task.priority === 'MEDIUM'"
-                      [class.high-prio]="task.priority === 'HIGH'">
-              circle
-            </mat-icon>
+                      [class.high-prio]="task.priority === 'HIGH'">circle</mat-icon>
             <span>
               {{ task.priority === 'LOW' ? 'Niedrig' : task.priority === 'MEDIUM' ? 'Mittel' : 'Hoch' }}
             </span>
           </div>
         </mat-select-trigger>
-
-        <mat-option value="LOW">
-          <div class="option-wrapper">
-            <mat-icon class="low-prio">circle</mat-icon> Niedrig
-          </div>
-        </mat-option>
-        <mat-option value="MEDIUM">
-          <div class="option-wrapper">
-            <mat-icon class="med-prio">circle</mat-icon> Mittel
-          </div>
-        </mat-option>
-        <mat-option value="HIGH">
-          <div class="option-wrapper">
-            <mat-icon class="high-prio">circle</mat-icon> Hoch
-          </div>
-        </mat-option>
+        <mat-option value="LOW"><div class="option-wrapper"><mat-icon class="low-prio">circle</mat-icon> Niedrig</div></mat-option>
+        <mat-option value="MEDIUM"><div class="option-wrapper"><mat-icon class="med-prio">circle</mat-icon> Mittel</div></mat-option>
+        <mat-option value="HIGH"><div class="option-wrapper"><mat-icon class="high-prio">circle</mat-icon> Hoch</div></mat-option>
       </mat-select>
     </mat-form-field>
 
@@ -55,35 +39,73 @@
       <textarea matInput [(ngModel)]="task.description" rows="4" placeholder="Beschreibe die Aufgabe näher..."></textarea>
     </mat-form-field>
   </div>
+
+  <div *ngIf="isLoadingDetails" class="loading-spinner">
+    <mat-spinner diameter="30"></mat-spinner>
+    <span>Lade Details...</span>
+  </div>
+
+  <div *ngIf="isEditMode && !isLoadingDetails" class="details-section">
+    <mat-divider></mat-divider>
+
+    <div class="attachments-block">
+      <h3><mat-icon>attach_file</mat-icon> Anhänge</h3>
+      <div class="file-list">
+        <div *ngFor="let file of task.attachments" class="file-item">
+          <mat-icon>insert_drive_file</mat-icon>
+          <a [href]="file.fileUrl" target="_blank">{{ file.fileName }}</a>
+          <button mat-icon-button color="warn" (click)="deleteAttachment(file.id)">
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </div>
+      </div>
+      <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none">
+      <button mat-stroked-button (click)="fileInput.click()">
+        <mat-icon>add</mat-icon> Datei hochladen
+      </button>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="comments-block">
+      <h3><mat-icon>chat_bubble_outline</mat-icon> Kommentare</h3>
+      <div class="comment-list">
+        <mat-card *ngFor="let comment of task.comments" class="comment-card">
+          <mat-card-header>
+            <div mat-card-avatar class="user-avatar">{{ comment.authorName[0] }}</div>
+            <mat-card-title>{{ comment.authorName }}</mat-card-title>
+            <mat-card-subtitle>{{ comment.createdAt | date:'short' }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>{{ comment.content }}</mat-card-content>
+        </mat-card>
+      </div>
+      
+      <mat-form-field appearance="outline" class="full-width comment-input">
+        <mat-label>Kommentar hinzufügen...</mat-label>
+        <textarea matInput [(ngModel)]="newCommentContent" rows="2"></textarea>
+        <button mat-icon-button matSuffix color="primary" (click)="addComment()" [disabled]="!newCommentContent.trim()">
+          <mat-icon>send</mat-icon>
+        </button>
+      </mat-form-field>
+    </div>
+  </div>
 </mat-dialog-content>
 
 <mat-dialog-actions>
   <div class="actions-container">
     <div class="left-actions">
       <button *ngIf="isEditMode && !showConfirmDelete" 
-              mat-stroked-button 
-              color="warn" 
-              (click)="onDelete()" 
-              class="delete-btn">
+              mat-stroked-button color="warn" (click)="onDelete()" class="delete-btn">
         <mat-icon>delete_outline</mat-icon> Löschen
       </button>
-
       <button *ngIf="showConfirmDelete" 
-              mat-raised-button 
-              color="warn" 
-              (click)="onDelete()" 
-              (mouseleave)="resetDelete()"
-              class="confirm-delete-btn">
+              mat-raised-button color="warn" (click)="onDelete()" (mouseleave)="resetDelete()" class="confirm-delete-btn">
         Wirklich löschen?
       </button>
     </div>
-
     <div class="right-actions">
-      <button mat-raised-button 
-              color="primary" 
-              [mat-dialog-close]="task" 
-              [disabled]="!task.title || showConfirmDelete" 
-              class="save-btn">
+      <button mat-raised-button color="primary" (click)="onSave()" 
+              [disabled]="!task.title || showConfirmDelete" class="save-btn">
         {{ isEditMode ? 'Änderungen speichern' : 'Task hinzufügen' }}
       </button>
     </div>

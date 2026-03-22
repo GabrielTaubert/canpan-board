@@ -1,13 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { KanbanBoard } from './kanban-board';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { TaskService } from '../../../core/services/task';
 import { ColumnService } from '../../../core/services/column.service';
 import { of } from 'rxjs';
 import { Task } from '../../../core/models/task-model';
 import { Column } from '../../../core/models/column-model';
 import { MatDialog } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { TaskService } from '../../../core/services/task.service';
 
 describe('KanbanBoard', () => {
   let component: KanbanBoard;
@@ -34,7 +34,6 @@ describe('KanbanBoard', () => {
 
     // Default Returns für die Mocks
     mockColumnService.getColumns.and.returnValue(of(initialMockColumns));
-    mockTaskService.getTasks.and.returnValue(of(JSON.parse(JSON.stringify(initialMockTasks))));
     
     // Für Create/Update Operationen wird ein leeres objekt zurückgegeben
     mockColumnService.createColumn.and.returnValue(of({} as Column));

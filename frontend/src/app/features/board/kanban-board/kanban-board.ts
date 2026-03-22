@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { KanbanColumn } from "../kanban-column/kanban-column";
 import { Task } from '../../../core/models/task-model';
-import { TaskService } from '../../../core/services/task';
 import { ActivatedRoute } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { MatDialog } from '@angular/material/dialog';
@@ -13,6 +12,7 @@ import { CommonModule } from '@angular/common';
 import { ColumnDialog } from '../column-dialog/column-dialog';
 import { ColumnService } from '../../../core/services/column.service';
 import { switchMap } from 'rxjs';
+import { TaskService } from '../../../core/services/task.service';
 
 @Component({
   selector: 'app-kanban-board',
@@ -49,54 +49,57 @@ export class KanbanBoard implements OnInit {
   }
 
   // Um die Gedroppten Tasks zu handeln
-  handleTaskDrop(event: CdkDragDrop<Task[]>, newStatus: string): void {
-    if (event.previousContainer === event.container) {
-      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-    } else {
-      transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
-        event.previousIndex,
-        event.currentIndex
-      );
-
-      const movedTask = event.container.data[event.currentIndex];
-      if (movedTask) {
-        movedTask.status = newStatus;
-        movedTask.updatedAt = new Date();
-      }
-    }
+  handleTaskDrop(event: CdkDragDrop<any[]>, newColumnId: string): void {
+  if (event.previousContainer === event.container) {
+    moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+  } else {
+    const task = event.previousContainer.data[event.previousIndex];
+    
+    // Server-Update
+    this.taskService.moveTask(task.id, newColumnId).subscribe({
+      next: () => {
+        transferArrayItem(
+          event.previousContainer.data,
+          event.container.data,
+          event.previousIndex,
+          event.currentIndex
+        );
+      },
+      error: () => this.refreshBoard()
+    });
   }
+}
 
   // Öffnet das Task Dialog Fenster
-  openTaskDialog(task?: Task, status?: string): void {
-    const dialogRef = this.dialog.open(TaskDialog, {
-      width: '400px',
-      data: { task: task, status: status || 'TODO' }
+  openTaskDialog(task?: any, columnId?: string): void {
+  if (task) {
+    // Wenn wir editieren, holen wir erst die Details (Kommentare, Attachments)
+    this.taskService.getTaskDetail(task.id).subscribe(fullTask => {
+      this.launchTaskDialog(fullTask, columnId);
     });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (!result) return;
-
-      if (result.delete && task) {
-        this.allTasks = this.allTasks.filter(t => t.id !== task.id);
-      } else if (task) {
-        const index = this.allTasks.findIndex(t => t.id === task.id);
-        if (index !== -1) {
-          this.allTasks[index] = { ...task, ...result, updatedAt: new Date() };
-        }
-      } else {
-        const newTask: Task = { 
-          ...result, 
-          id: Math.random().toString(36).substring(2, 9),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          status: status || 'TODO'
-        };
-        this.allTasks.push(newTask);
-      }
-    });
+  } else {
+    // Neuer Task: Wir starten leer
+    this.launchTaskDialog(null, columnId);
   }
+}
+
+private launchTaskDialog(task: any, columnId?: string) {
+  const dialogRef = this.dialog.open(TaskDialog, {
+    width: '600px',
+    data: { task, columnId }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (!result) return;
+    if (result.delete) {
+      this.taskService.deleteTask(task.id).subscribe(() => this.refreshBoard());
+    } else if (task) {
+      this.taskService.updateTask(task.id, result).subscribe(() => this.refreshBoard());
+    } else {
+      this.taskService.createTask(columnId!, result).subscribe(() => this.refreshBoard());
+    }
+  });
+}
 
   // Öffnet das Spalten Dialog Fenster
   openColumnDialog(column?: Column): void {
