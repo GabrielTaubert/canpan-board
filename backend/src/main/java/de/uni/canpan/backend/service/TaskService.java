@@ -18,19 +18,22 @@ public class TaskService {
     private final TaskCommentRepository taskCommentRepository;
     private final TaskLabelRepository taskLabelRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public TaskService(TaskRepository taskRepository,
                        TaskAttachmentRepository taskAttachmentRepository,
                        KanbanColumnRepository columnRepository,
                        TaskCommentRepository taskCommentRepository,
                        TaskLabelRepository taskLabelRepository,
-                       UserRepository userRepository) {
+                       UserRepository userRepository,
+                       NotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.taskAttachmentRepository = taskAttachmentRepository;
         this.columnRepository = columnRepository;
         this.taskCommentRepository = taskCommentRepository;
         this.taskLabelRepository = taskLabelRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -63,7 +66,14 @@ public class TaskService {
                 assignedUser
         );
 
-        return taskRepository.save(newTask);
+        Task savedTask = taskRepository.save(newTask);
+
+        if (assignedUser != null) {
+            notificationService.sendNotification(assignedUser,
+                    "New task assigned: '" + savedTask.getTitle() + "'");
+        }
+
+        return savedTask;
     }
 
     @Transactional
@@ -80,8 +90,16 @@ public class TaskService {
                 .orElseThrow(() -> new IllegalArgumentException("Column not found"));
 
         task.setColumn(targetColumn);
+        Task savedTask = taskRepository.save(task);
 
-        return taskRepository.save(task);
+        if (savedTask.getAssignedTo() != null) {
+            notificationService.sendNotification(
+                    savedTask.getAssignedTo(),
+                    "Status update: Your task '" + savedTask.getTitle() + "' has been moved to '" + targetColumn.getName() + "'."
+            );
+        }
+
+        return savedTask;
     }
 
     @Transactional(readOnly = true)
@@ -128,9 +146,11 @@ public class TaskService {
         KanbanColumn column = columnRepository.findById(request.columnId())
                 .orElseThrow(() -> new IllegalArgumentException("Column not found"));
 
-        User assignedUser = null;
+        User oldUser = task.getAssignedTo();
+
+        User newUser = null;
         if (request.assignedTo() != null) {
-            assignedUser = userRepository.findById(request.assignedTo())
+            newUser = userRepository.findById(request.assignedTo())
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
         }
 
@@ -139,7 +159,17 @@ public class TaskService {
         task.setColumn(column);
         task.setPriority(request.priority());
         task.setStorypoints(request.storypoints());
-        task.setAssignedTo(assignedUser);
+        task.setAssignedTo(newUser);
+
+        if (newUser != null) {
+            boolean wasNullBefore = (oldUser == null);
+            boolean isDifferentUser = !wasNullBefore && !oldUser.getId().equals(newUser.getId());
+
+            if (wasNullBefore || isDifferentUser) {
+                notificationService.sendNotification(newUser,
+                        "Assignment: The task '" + task.getTitle() + "' has been assigned to you.");
+            }
+        }
 
         return task;
     }
