@@ -7,19 +7,22 @@ import java.util.UUID;
 public record TaskSummaryDto(
         UUID id,
         String title,
+        String description,
         Task.TaskPriority priority,
-        Integer storypoints,
-        UUID assignedTo,
+        String assignedTo,
         UUID columnId
 ) {
     public static TaskSummaryDto from(Task task) {
-        UUID assignedUserId = (task.getAssignedTo() != null) ? task.getAssignedTo().getId() : null;
+        String userName = (task.getAssignedTo() != null)
+                ? task.getAssignedTo().getDisplayName()
+                : null;
+
         return new TaskSummaryDto(
                 task.getId(),
                 task.getTitle(),
+                task.getDescription(),
                 task.getPriority(),
-                task.getStorypoints(),
-                assignedUserId,
+                userName,
                 task.getColumn().getId()
         );
     }
