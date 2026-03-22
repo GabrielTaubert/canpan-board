@@ -32,5 +32,5 @@ export interface TaskComment {
   userId: string;
   authorName: string;
   content: string;
-  createdAt: string; // ISO-String vom Backend
+  createdAt: string;
 }
