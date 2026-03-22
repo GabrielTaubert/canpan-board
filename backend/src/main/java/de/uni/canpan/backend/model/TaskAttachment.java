@@ -33,6 +33,6 @@ public class TaskAttachment {
     public UUID getId() {return id;}
     public Task getTask() {return task;}
     public String getFileName() {return fileName;}
-    public String getFilePath() {return fileUrl;}
+    public String getFileUrl() {return fileUrl;}
 
 }
