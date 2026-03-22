@@ -69,28 +69,22 @@ export class KanbanBoard implements OnInit {
   handleTaskDrop(event: CdkDragDrop<Task[]>, newColumnId: string): void {
   // 1. Wenn in die gleiche Spalte verschoben wurde:
   if (event.previousContainer === event.container) {
-    // Hier könntest du optional die Sortierung im Backend speichern
     moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
   } 
   
   // 2. Wenn in eine andere Spalte verschoben wurde:
   else {
-    // Hol den Task direkt aus dem Event
     const task = event.item.data; 
     const oldColumnId = task.columnId;
 
-    // OPTIMISTISCHES UPDATE: 
-    // Wir ändern die ID lokal sofort, damit der Task in die neue Spalte "rutscht"
     task.columnId = newColumnId;
 
     // 3. Server informieren
     this.taskService.moveTask(task.id, newColumnId).subscribe({
       next: () => {
         console.log('Task erfolgreich verschoben');
-        // Optional: refreshBoard(), falls das Backend weitere Daten ändert (z.B. updatedAt)
       },
       error: (err) => {
-        // ROLLBACK: Wenn der Server nein sagt, schieben wir ihn zurück
         task.columnId = oldColumnId;
         console.error('Fehler beim Verschieben:', err);
         this.refreshBoard(); // Board wieder synchronisieren
@@ -107,7 +101,7 @@ export class KanbanBoard implements OnInit {
       this.launchTaskDialog(fullTask, columnId);
     });
   } else {
-    // Neuer Task: Wir starten leer
+    // Neuer Task = leeres Dialog Fenster
     this.launchTaskDialog(null, columnId);
   }
 }
