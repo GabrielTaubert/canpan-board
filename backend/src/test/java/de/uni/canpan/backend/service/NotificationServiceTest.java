@@ -55,10 +55,10 @@ class NotificationServiceTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void getUnreadNotifications_returnsOnlyUnread() {
-        // Eine ungelesene Nachricht
+        // unread message
         notificationService.sendNotification(testUser, "Unread 1");
 
-        // Eine manuell als gelesen markierte Nachricht
+        // manuel notification set read
         Notification readNote = new Notification(testUser, "Already Read");
         readNote.setRead(true);
         notificationRepository.save(readNote);
@@ -71,22 +71,18 @@ class NotificationServiceTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void markAsRead_updatesStatusCorrectly() {
-        // 1. Nachricht erstellen
         notificationService.sendNotification(testUser, "Mark me");
         Notification note = notificationRepository.findAll().get(0);
         UUID noteId = note.getId();
 
-        // 2. Aktion: Als gelesen markieren
+        // mark as read
         notificationService.markAsRead(noteId);
 
-        // 3. Check: Aus der "Ungelesen"-Liste verschwunden?
         List<NotificationDto> unreadAfter = notificationService.getUnreadNotifications(testUser.getId());
         assertThat(unreadAfter).isEmpty();
 
-        // 4. Check in DB: Ist das Flag wirklich auf true?
         Notification updatedNote = notificationRepository.findById(noteId).orElseThrow();
 
-        // HIER nutzen wir die Variable jetzt:
         assertThat(updatedNote.isRead()).isTrue();
     }
 
