@@ -19,11 +19,12 @@
   <app-kanban-column
     *ngFor="let col of sortedColumns"
     [title]="col.name"
-    [tasks]="getTasksByStatus(col.id)"
     [canEdit]="!col.isSystem"
+    [columnId]="col.id" 
+    [tasks]="getTasksByColumn(col.id)" 
     (taskDropped)="handleTaskDrop($event, col.id)"
     (addTask)="openTaskDialog(undefined, col.id)"
     (editTask)="openTaskDialog($event)"
     (renameColumn)="openColumnDialog(col)">
-</app-kanban-column>
+  </app-kanban-column>
 </div>

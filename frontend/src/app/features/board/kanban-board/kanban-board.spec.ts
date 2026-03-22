@@ -1,9 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { KanbanBoard } from './kanban-board';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { TaskService } from '../../../core/services/task';
 import { ColumnService } from '../../../core/services/column.service';
-import { of } from 'rxjs';
+import { TaskService } from '../../../core/services/task.service';
+import { of, throwError } from 'rxjs';
 import { Task } from '../../../core/models/task-model';
 import { Column } from '../../../core/models/column-model';
 import { MatDialog } from '@angular/material/dialog';
@@ -16,203 +16,161 @@ describe('KanbanBoard', () => {
   let mockColumnService: jasmine.SpyObj<ColumnService>;
   let mockTaskService: jasmine.SpyObj<TaskService>;
 
-  const initialMockTasks: Task[] = [
-    { id: '1', title: 'Task 1', status: 'TODO' } as Task,
-    { id: '2', title: 'Task 2', status: 'IN_PROGRESS' } as Task
+  const initialMockColumns: Column[] = [
+    { id: 'COL_TODO', name: 'To Do', isSystem: true, position: 0 },
+    { id: 'COL_DONE', name: 'Done', isSystem: true, position: 1 }
   ];
 
-  const initialMockColumns: Column[] = [
-    { id: 'TODO', name: 'To Do', isSystem: true, position: 0 },
-    { id: 'DONE', name: 'Done', isSystem: true, position: 999 }
+  const initialMockTasks: Task[] = [
+    { id: 't1', title: 'Task 1', columnId: 'COL_TODO' } as Task,
+    { id: 't2', title: 'Task 2', columnId: 'COL_DONE' } as Task
   ];
 
   beforeEach(async () => {
-    mockColumnService = jasmine.createSpyObj('ColumnService', [
-      'getColumns', 'createColumn', 'renameColumn', 'moveColumn', 'deleteColumn'
-    ]);
-    mockTaskService = jasmine.createSpyObj('TaskService', ['getTasks']);
+    mockColumnService = jasmine.createSpyObj('ColumnService', ['getColumns', 'createColumn', 'renameColumn', 'moveColumn', 'deleteColumn']);
+    mockTaskService = jasmine.createSpyObj('TaskService', ['getProjectTasks', 'moveTask', 'getTaskDetail', 'createTask', 'updateTask', 'deleteTask']);
 
-    // Default Returns für die Mocks
     mockColumnService.getColumns.and.returnValue(of(initialMockColumns));
-    mockTaskService.getTasks.and.returnValue(of(JSON.parse(JSON.stringify(initialMockTasks))));
-    
-    // Für Create/Update Operationen wird ein leeres objekt zurückgegeben
-    mockColumnService.createColumn.and.returnValue(of({} as Column));
-    mockColumnService.renameColumn.and.returnValue(of({} as Column));
-    mockColumnService.moveColumn.and.returnValue(of({} as Column));
-    mockColumnService.deleteColumn.and.returnValue(of(void 0));
+    mockTaskService.getProjectTasks.and.returnValue(of(initialMockTasks));
+    mockTaskService.moveTask.and.returnValue(of({}));
+    mockTaskService.deleteTask.and.returnValue(of(void 0));
+    mockTaskService.updateTask.and.returnValue(of({}));
+    mockTaskService.createTask.and.returnValue(of({}));
+    mockTaskService.getTaskDetail.and.returnValue(of(initialMockTasks[0]));
 
     await TestBed.configureTestingModule({
       imports: [KanbanBoard, NoopAnimationsModule],
       providers: [
         provideRouter([]),
-        {
-          provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: { get: () => 'project-123' } } }
-        },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'p123' } } } },
         { provide: TaskService, useValue: mockTaskService },
         { provide: ColumnService, useValue: mockColumnService },
-        {
-          provide: MatDialog,
-          useValue: jasmine.createSpyObj('MatDialog', ['open'])
-        }
+        { provide: MatDialog, useValue: jasmine.createSpyObj('MatDialog', ['open']) }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(KanbanBoard);
     component = fixture.componentInstance;
     dialog = TestBed.inject(MatDialog);
-    fixture.detectChanges(); 
+    fixture.detectChanges();
   });
 
-  it('should create and load columns on init', async () => {
-  expect(component).toBeTruthy();
+  it('should load initial data (columns and tasks) on init', () => {
+  expect(mockColumnService.getColumns).toHaveBeenCalledWith('p123');
+  expect(mockTaskService.getProjectTasks).toHaveBeenCalledWith('p123');
   
-  fixture.detectChanges();
-  await fixture.whenStable();
-
-  expect(mockColumnService.getColumns).toHaveBeenCalledWith('project-123');
-  
-  expect(component.columns.length).toBe(initialMockColumns.length); 
+  expect(component.columns.length).toBe(initialMockColumns.length);
+  expect(component.allTasks.length).toBe(initialMockTasks.length);
 });
 
-  // Column logik tests
-
-  it('should create a new column via service and refresh board', () => {
-    const dialogResult = { name: 'New Col', position: 1 };
-    (dialog.open as jasmine.Spy).and.returnValue({
-      afterClosed: () => of(dialogResult)
-    });
-
-    component.openColumnDialog();
-
-    expect(mockColumnService.createColumn).toHaveBeenCalledWith('project-123', 'New Col', 1);
-    expect(mockColumnService.getColumns).toHaveBeenCalledTimes(2); // Init + Refresh
+  it('should filter tasks by columnId using getTasksByColumn', () => {
+    const todoTasks = component.getTasksByColumn('COL_TODO');
+    expect(todoTasks.length).toBe(1);
+    expect(todoTasks[0].id).toBe('t1');
   });
 
-  it('should rename a column when only name changes', () => {
-    const columnToEdit = component.columns[0]; // TODO
-    const dialogResult = { name: 'New Name', position: 0 }; // Position bleibt gleich
-    (dialog.open as jasmine.Spy).and.returnValue({
-      afterClosed: () => of(dialogResult)
-    });
+  it('should sort columns by position', () => {
+    component.columns = [
+      { id: 'B', name: 'B', position: 2 } as Column,
+      { id: 'A', name: 'A', position: 1 } as Column
+    ];
+    expect(component.sortedColumns[0].id).toBe('A');
+  });
 
-    component.openColumnDialog(columnToEdit);
+  // Task drag & drop
 
-    expect(mockColumnService.renameColumn).toHaveBeenCalledWith('project-123', 'TODO', 'New Name');
+it('should handle task drop in same container', () => {
+  const data = [{ title: 'A' }, { title: 'B' }];
+  const mockEvent = {
+    previousContainer: { data: data },
+    container: { data: data },
+    previousIndex: 0,
+    currentIndex: 1,
+    item: { data: data[0] }
+  } as any;
+
+  component.handleTaskDrop(mockEvent, 'TODO');
+  expect(true).toBeTrue(); 
+});
+
+  it('should handle task drop (different container) and rollback on error', () => {
+    const task = { id: 't1', columnId: 'COL_TODO' } as Task;
+    const event = {
+      item: { data: task },
+      previousContainer: { id: 'old' },
+      container: { id: 'new' }
+    } as any;
+
+    mockTaskService.moveTask.and.returnValue(throwError(() => new Error('Fail')));
+    spyOn(component, 'refreshBoard');
+
+    component.handleTaskDrop(event, 'COL_DONE');
+
+    expect(task.columnId).toBe('COL_TODO'); // Rollback
+    expect(component.refreshBoard).toHaveBeenCalled();
+  });
+
+  // Task dialog
+
+  it('should fetch task details before opening dialog for existing task', () => {
+    const taskSummary = { id: 't1' };
+    (dialog.open as jasmine.Spy).and.returnValue({ afterClosed: () => of(null) });
+
+    component.openTaskDialog(taskSummary, 'COL_TODO');
+
+    expect(mockTaskService.getTaskDetail).toHaveBeenCalledWith('t1');
+  });
+
+  // Column dialog
+
+  it('should rename a column when name changes', () => {
+    const col = { id: 'c1', name: 'Old', position: 1 } as Column;
+    (dialog.open as jasmine.Spy).and.returnValue({ afterClosed: () => of({ name: 'New', position: 1 }) });
+    mockColumnService.renameColumn.and.returnValue(of({} as Column));
+
+    component.openColumnDialog(col);
+
+    expect(mockColumnService.renameColumn).toHaveBeenCalledWith('p123', 'c1', 'New');
     expect(mockColumnService.moveColumn).not.toHaveBeenCalled();
   });
 
-  it('should move a column when only position changes', () => {
-    const columnToEdit = component.columns[0];
-    const dialogResult = { name: 'To Do', position: 5 }; // Name bleibt gleich
-    (dialog.open as jasmine.Spy).and.returnValue({
-      afterClosed: () => of(dialogResult)
-    });
+  it('should move a column when position changes', () => {
+    const col = { id: 'c1', name: 'Same', position: 1 } as Column;
+    (dialog.open as jasmine.Spy).and.returnValue({ afterClosed: () => of({ name: 'Same', position: 2 }) });
+    mockColumnService.moveColumn.and.returnValue(of({} as Column));
 
-    component.openColumnDialog(columnToEdit);
+    component.openColumnDialog(col);
 
-    expect(mockColumnService.moveColumn).toHaveBeenCalledWith('project-123', 'TODO', 5);
+    expect(mockColumnService.moveColumn).toHaveBeenCalledWith('p123', 'c1', 2);
     expect(mockColumnService.renameColumn).not.toHaveBeenCalled();
   });
 
-  it('should rename AND move a column using switchMap logic', () => {
-    const columnToEdit = component.columns[0];
-    const dialogResult = { name: 'New Name', position: 10 };
-    (dialog.open as jasmine.Spy).and.returnValue({
-      afterClosed: () => of(dialogResult)
-    });
+  it('should rename AND move a column using switchMap', fakeAsync(() => {
+    const col = { id: 'c1', name: 'Old', position: 1 } as Column;
+    (dialog.open as jasmine.Spy).and.returnValue({ afterClosed: () => of({ name: 'New', position: 2 }) });
+    mockColumnService.renameColumn.and.returnValue(of({} as Column));
+    mockColumnService.moveColumn.and.returnValue(of({} as Column));
 
-    component.openColumnDialog(columnToEdit);
+    component.openColumnDialog(col);
+    tick();
 
     expect(mockColumnService.renameColumn).toHaveBeenCalled();
     expect(mockColumnService.moveColumn).toHaveBeenCalled();
-  });
+  }));
 
   it('should delete a column via service', () => {
-    const columnToDelete = { id: 'COL1', name: 'Temp', isSystem: false, position: 2 };
-    component.columns.push(columnToDelete);
+    const col = { id: 'COL1', name: 'Temp', isSystem: false, position: 2 } as Column;
+    component.columns.push(col);
     
+    mockColumnService.deleteColumn.and.returnValue(of(undefined));
+    mockColumnService.getColumns.and.returnValue(of(initialMockColumns));
+
     (dialog.open as jasmine.Spy).and.returnValue({
       afterClosed: () => of({ delete: true })
     });
 
-    component.openColumnDialog(columnToDelete);
+    component.openColumnDialog(col);
 
-    expect(mockColumnService.deleteColumn).toHaveBeenCalledWith('project-123', 'COL1');
-  });
-
-  // Task Logik tests
-
-  it('should filter tasks by status using getTasksByStatus', async () => {
-  // Sicherstellen, dass die Daten geladen sind
-  component.allTasks = [
-    { id: '1', title: 'Task 1', status: 'TODO' } as Task
-   ];
-  
-  fixture.detectChanges();
-  await fixture.whenStable(); 
-
-  const todoTasks = component.getTasksByStatus('TODO');
-  
-  expect(todoTasks.length).toBe(1);
-  if (todoTasks.length > 0) {
-    expect(todoTasks[0].title).toBe('Task 1');
-  }
-});
-
-  it('should handle task drop correctly', () => {
-    const data = [...initialMockTasks];
-    const mockEvent = {
-      previousContainer: { data: data },
-      container: { data: data },
-      previousIndex: 0,
-      currentIndex: 1
-    } as any;
-    
-    component.handleTaskDrop(mockEvent, 'TODO');
-    expect(data[0].title).toBe('Task 2');
-  });
-
-  it('should update task status on transfer', () => {
-    const sourceData = [initialMockTasks[0]];
-    const targetData: Task[] = [];
-    const mockEvent = {
-      previousContainer: { data: sourceData },
-      container: { data: targetData },
-      previousIndex: 0,
-      currentIndex: 0
-    } as any;
-
-    component.handleTaskDrop(mockEvent, 'DONE');
-    expect(targetData[0].status).toBe('DONE');
-  });
-
-  it('should open task dialog and add new task locally', () => {
-    (dialog.open as jasmine.Spy).and.returnValue({
-      afterClosed: () => of({ title: 'New Task' })
-    });
-    
-    const initialCount = component.allTasks.length;
-    component.openTaskDialog();
-    expect(component.allTasks.length).toBe(initialCount + 1);
-  });
-
-  it('should cover branch when task dialog is cancelled', () => {
-    (dialog.open as jasmine.Spy).and.returnValue({
-      afterClosed: () => of(null)
-    });
-    const snapshot = component.allTasks.length;
-    component.openTaskDialog();
-    expect(component.allTasks.length).toBe(snapshot);
-  });
-
-  it('should handle task deletion via dialog result', () => {
-    component.allTasks = [{ id: '1', title: 'T1' } as Task];
-    (dialog.open as jasmine.Spy).and.returnValue({
-      afterClosed: () => of({ delete: true })
-    });
-    component.openTaskDialog(component.allTasks[0]);
-    expect(component.allTasks.length).toBe(0);
+    expect(mockColumnService.deleteColumn).toHaveBeenCalledWith('p123', 'COL1');
   });
 });

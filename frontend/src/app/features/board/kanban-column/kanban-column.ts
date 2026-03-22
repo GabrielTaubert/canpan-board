@@ -17,6 +17,7 @@ export class KanbanColumn {
   @Input() title: string = '';
   @Input() tasks: Task[] = [];
   @Input() canEdit: boolean = true; // Neu: Steuert die Sichtbarkeit der Buttons
+  @Input() columnId: string = '';
 
   @Output() taskDropped = new EventEmitter<CdkDragDrop<Task[]>>();
   @Output() addTask = new EventEmitter<string>();
