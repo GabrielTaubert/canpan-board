@@ -173,4 +173,74 @@ it('should handle task drop in same container', () => {
 
     expect(mockColumnService.deleteColumn).toHaveBeenCalledWith('p123', 'COL1');
   });
+
+  it('should call deleteTask and refresh board when dialog result is delete', () => {
+    const task = { id: 't1' };
+    (dialog.open as jasmine.Spy).and.returnValue({
+      afterClosed: () => of({ delete: true })
+    });
+    spyOn(component, 'refreshBoard');
+
+    component.openTaskDialog(task, 'COL_TODO');
+
+    expect(mockTaskService.deleteTask).toHaveBeenCalledWith('t1');
+    expect(component.refreshBoard).toHaveBeenCalled();
+  });
+
+  it('should call updateTask and refresh board when editing an existing task', () => {
+    const task = { id: 't1' };
+    const editResult = { title: 'Updated Title' };
+    (dialog.open as jasmine.Spy).and.returnValue({
+      afterClosed: () => of(editResult)
+    });
+    spyOn(component, 'refreshBoard');
+
+    component.openTaskDialog(task, 'COL_TODO');
+
+    expect(mockTaskService.updateTask).toHaveBeenCalledWith('t1', editResult);
+    expect(component.refreshBoard).toHaveBeenCalled();
+  });
+
+  it('should call createTask and refresh board when creating a new task', () => {
+    const createResult = { title: 'New Task' };
+    (dialog.open as jasmine.Spy).and.returnValue({
+      afterClosed: () => of(createResult)
+    });
+    spyOn(component, 'refreshBoard');
+
+    component.openTaskDialog(null, 'COL_TODO');
+
+    expect(mockTaskService.createTask).toHaveBeenCalledWith('COL_TODO', createResult);
+    expect(component.refreshBoard).toHaveBeenCalled();
+  });
+
+  it('should call createColumn and refresh board when creating a new column', () => {
+    const newColData = { name: 'New Column', position: 5 };
+    (dialog.open as jasmine.Spy).and.returnValue({
+      afterClosed: () => of(newColData)
+    });
+    spyOn(component, 'refreshBoard');
+    mockColumnService.createColumn.and.returnValue(of({ id: 'new-id' } as Column));
+
+    component.openColumnDialog();
+
+    expect(mockColumnService.createColumn).toHaveBeenCalledWith('p123', 'New Column', 5);
+    expect(component.refreshBoard).toHaveBeenCalled();
+  });
+
+  it('should use default position when creating a column without specified position', () => {
+    const newColData = { name: 'New Column' };
+    (dialog.open as jasmine.Spy).and.returnValue({
+      afterClosed: () => of(newColData)
+    });
+    spyOn(component, 'refreshBoard');
+    mockColumnService.createColumn.and.returnValue(of({} as Column));
+    
+    component.columns = [{} as Column, {} as Column];
+
+    component.openColumnDialog();
+
+    expect(mockColumnService.createColumn).toHaveBeenCalledWith('p123', 'New Column', 2);
+  });
+
 });

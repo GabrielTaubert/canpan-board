@@ -74,6 +74,16 @@ describe('StorageService', () => {
       expect(storageFromSpy.remove).not.toHaveBeenCalled();
     });
 
+    it('should throw error and log it if removal fails', async () => {
+      const mockError = new Error('Supabase Delete Error');
+      storageFromSpy.remove.and.resolveTo({ data: null, error: mockError });
+      
+      const errorSpy = spyOn(console, 'error');
+
+      await expectAsync(service.deleteFile(mockUrl)).toBeRejectedWith(mockError);
+      expect(errorSpy).toHaveBeenCalledWith(jasmine.stringMatching('Supabase Storage Fehler'), mockError);
+    });
+
     it('should log a warning if file was not found (data empty)', async () => {
       storageFromSpy.remove.and.resolveTo({ data: [], error: null });
       const warnSpy = spyOn(console, 'warn');

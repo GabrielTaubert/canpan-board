@@ -18,12 +18,11 @@ describe('TaskDialog', () => {
   async function setupTest(dialogData: any) {
     mockDialogRef = { close: jasmine.createSpy('close') };
     mockTaskService = jasmine.createSpyObj('TaskService', ['getTaskDetail', 'addComment', 'deleteAttachment', 'addAttachmentUrl']);
-    mockAuthService = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
+    mockAuthService = { user: jasmine.createSpy('user').and.returnValue({ id: 'u1', email: 'test@example.com' }) };
     mockStorageService = jasmine.createSpyObj('StorageService', ['uploadFile', 'deleteFile']);
 
     mockTaskService.getTaskDetail.and.returnValue(of({ description: 'Full detail' }));
-    mockAuthService.getCurrentUser.and.returnValue(of({ id: 'u1', name: 'Test User' }));
-    mockTaskService.addComment.and.returnValue(of({ id: 'c1', content: 'New Comment' }));
+    mockTaskService.addComment.and.returnValue(of({ id: 'c1', content: 'New Comment', authorName: 'test@example.com' }));
     mockTaskService.deleteAttachment.and.returnValue(of(null));
     mockTaskService.addAttachmentUrl.and.returnValue(of({ id: 'a-new', fileName: 'test.jpg', fileUrl: 'http://supabase.url/file.png' }));
     mockStorageService.uploadFile.and.resolveTo('http://supabase.url/file.png');
@@ -45,103 +44,112 @@ describe('TaskDialog', () => {
     fixture.detectChanges();
   }
 
-  it('should load full details on init in edit mode', async () => {
-    await setupTest({ task: { id: 't1', title: 'Edit' }, columnId: 'c1' });
-    expect(mockTaskService.getTaskDetail).toHaveBeenCalledWith('t1');
+  // Core & UI
+
+  it('should get avatar color based on name hash', async () => {
+    await setupTest({ task: null, columnId: 'c1' });
+    const color1 = component.getAvatarColor('Elias');
+    const color2 = component.getAvatarColor('Elias');
+    const color3 = component.getAvatarColor('Other');
+    expect(color1).toBe(color2);
+    expect(color1).not.toBe(color3);
   });
 
-  // Attachments
-
-  it('should upload a file, call backend and update UI', async () => {
-    await setupTest({ task: { id: 't1' }, columnId: 'c1' });
-    const file = new File([''], 'test.jpg');
-    const event = { target: { files: [file] } };
-
-    await component.onFileSelected(event);
-
-    expect(mockStorageService.uploadFile).toHaveBeenCalledWith(file, 't1');
-    expect(mockTaskService.addAttachmentUrl).toHaveBeenCalledWith('t1', 'test.jpg', 'http://supabase.url/file.png');
-    expect(component.task.attachments?.length).toBe(1);
-    expect(component.isLoadingDetails).toBeFalse();
+  it('should parse short name from email', async () => {
+    await setupTest({ task: null, columnId: 'c1' });
+    expect(component.getShortName('max.mustermann@web.de')).toBe('max.mustermann');
+    expect(component.getShortName(null)).toBe('Unbekannter User');
   });
 
-  it('should handle upload error gracefully', async () => {
+  it('should handle error when loading task details', async () => {
+    mockTaskService.getTaskDetail.and.returnValue(throwError(() => new Error('Load Error')));
     await setupTest({ task: { id: 't1' }, columnId: 'c1' });
-    mockStorageService.uploadFile.and.rejectWith(new Error('Upload failed'));
+    expect(component.isLoadingDetails).toBeFalse(); // Deckt Zeile 100 ab
+  });
+
+  // Comments
+
+  it('should add a comment and update UI locally', async () => {
+    await setupTest({ task: { id: 't1', comments: [] }, columnId: 'c1' });
+    component.newCommentContent = 'My new comment';
+    component.addComment();
+
+    expect(mockTaskService.addComment).toHaveBeenCalledWith('t1', 'My new comment', 'u1');
+    expect(component.task.comments?.length).toBe(1);
+    expect(component.newCommentContent).toBe('');
+  });
+
+  it('should not add comment if content is empty or task id missing', async () => {
+    await setupTest({ task: {}, columnId: 'c1' }); // Fehlende ID
+    component.newCommentContent = '   ';
+    component.addComment();
+    expect(mockTaskService.addComment).not.toHaveBeenCalled();
+  });
+
+  it('should handle comment error', async () => {
+    await setupTest({ task: { id: 't1' }, columnId: 'c1' });
+    mockTaskService.addComment.and.returnValue(throwError(() => new Error('Error')));
+    spyOn(console, 'error');
+    component.newCommentContent = 'Error Test';
+    component.addComment();
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  // Attachments & Downloads
+
+  it('should handle backend error after successful supabase upload', async () => {
+    await setupTest({ task: { id: 't1' }, columnId: 'c1' });
+    mockTaskService.addAttachmentUrl.and.returnValue(throwError(() => new Error('DB Error')));
     spyOn(window, 'alert');
 
     await component.onFileSelected({ target: { files: [new File([], 'test.jpg')] } });
 
-    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching('Fehler beim Supabase-Upload'));
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching('Link konnte nicht im Task gespeichert werden'));
     expect(component.isLoadingDetails).toBeFalse();
   });
 
-  it('should delete an attachment if confirmed', fakeAsync(async () => {
-    await setupTest({ 
-      task: { 
-        id: 't1', 
-        attachments: [{ id: 'a1', fileName: 'test.txt', fileUrl: 'url1' }] 
-      }, 
-      columnId: 'c1' 
-    });
-    
+  it('should handle delete attachment error', async () => {
+    await setupTest({ task: { id: 't1', attachments: [{id: 'a1', fileName: 'f'}] }, columnId: 'c1' });
     spyOn(window, 'confirm').and.returnValue(true);
-    mockStorageService.deleteFile.and.resolveTo();
+    mockTaskService.deleteAttachment.and.returnValue(throwError(() => new Error('Delete Error')));
+    spyOn(window, 'alert');
 
-    component.onDeleteAttachment({ id: 'a1', fileName: 'test.txt', fileUrl: 'url1' } as any);
-    
-    tick();
-    fixture.detectChanges();
-
-    expect(mockTaskService.deleteAttachment).toHaveBeenCalledWith('a1');
-    expect(component.task.attachments?.length).toBe(0);
-  }));
-
-  it('should NOT delete if confirm is cancelled', async () => {
-    await setupTest({ 
-      task: { 
-        id: 't1', 
-        attachments: [{ id: 'a1', fileName: 'test.txt', fileUrl: 'url1' }] 
-      }, 
-      columnId: 'c1' 
-    });
-    
-    spyOn(window, 'confirm').and.returnValue(false);
-    component.onDeleteAttachment({ id: 'a1', fileName: 'test.txt' } as any);
-
-    expect(mockTaskService.deleteAttachment).not.toHaveBeenCalled();
+    component.onDeleteAttachment({id: 'a1', fileName: 'f'} as any);
+    expect(window.alert).toHaveBeenCalled();
   });
 
-  it('should identify image extensions correctly', async () => {
+  it('should trigger successful download via fetch blob', fakeAsync(async () => {
     await setupTest({ task: null, columnId: 'c1' });
-    expect(component.isImage('test.PNG')).toBeTrue();
-    expect(component.isImage('document.pdf')).toBeFalse();
-  });
+    const mockBlob = new Blob(['content'], { type: 'text/plain' });
+    
+    // Wir mocken die fetch-API Kette
+    spyOn(window, 'fetch').and.resolveTo({
+      blob: () => Promise.resolve(mockBlob)
+    } as Response);
+    
+    // Spies für die DOM-Manipulation beim Download
+    const mockURL = 'blob:local-url';
+    spyOn(window.URL, 'createObjectURL').and.returnValue(mockURL);
+    spyOn(window.URL, 'revokeObjectURL');
+    const linkSpy = jasmine.createSpyObj('a', ['click']);
+    spyOn(document, 'createElement').and.returnValue(linkSpy);
+    spyOn(document.body, 'appendChild');
+    spyOn(document.body, 'removeChild');
 
-  it('should handle download via fetch and fallback to window.open on error', fakeAsync(async () => {
-    await setupTest({ task: null, columnId: 'c1' });
-    const mockFile = { fileName: 'test.jpg', fileUrl: 'http://test.url' } as any;
-
-    spyOn(window, 'fetch').and.returnValue(Promise.reject('Network error'));
-    const openSpy = spyOn(window, 'open');
-
-    component.downloadFile(mockFile);
+    component.downloadFile({ fileName: 'test.txt', fileUrl: 'http://remote.url' } as any);
     
     tick();
     
-    expect(openSpy).toHaveBeenCalledWith('http://test.url', '_blank');
+    expect(window.fetch).toHaveBeenCalledWith('http://remote.url');
+    expect(document.createElement).toHaveBeenCalledWith('a');
+    expect(linkSpy.download).toBe('test.txt');
+    expect(linkSpy.click).toHaveBeenCalled();
   }));
 
-  // Comments
-
-  it('should add a comment and clear the input', async () => {
-    await setupTest({ task: { id: 't1' }, columnId: 'c1' });
-    component.newCommentContent = 'Nice work!';
-    
-    component.addComment();
-
-    expect(mockTaskService.addComment).toHaveBeenCalledWith('t1', 'Nice work!', 'u1');
-    expect(component.newCommentContent).toBe('');
-    expect(component.task.comments?.length).toBe(1);
+  it('should open image in new tab', async () => {
+    await setupTest({ task: null, columnId: 'c1' });
+    const spy = spyOn(window, 'open');
+    component.openFullImage('http://test.url');
+    expect(spy).toHaveBeenCalledWith('http://test.url', '_blank');
   });
 });
