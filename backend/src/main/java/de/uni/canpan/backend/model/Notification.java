@@ -45,4 +45,5 @@ public class Notification {
     public User getRecipient() {return this.recipient;}
     public UUID  getId() {return  this.id;}
     public OffsetDateTime getCreatedAt() {return  this.createdAt;}
+    public boolean isRead() {return read;}
 }
