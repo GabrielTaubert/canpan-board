@@ -1,11 +1,10 @@
 package de.uni.canpan.backend.controller;
 
 import de.uni.canpan.backend.dto.TaskAttachmentDto;
+import de.uni.canpan.backend.dto.TaskAttachmentUrlRequest;
 import de.uni.canpan.backend.model.TaskAttachment;
 import de.uni.canpan.backend.service.TaskAttachmentService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -20,26 +19,17 @@ public class TaskAttachmentController {
         this.attachmentService = attachmentService;
     }
 
-    @PostMapping("/{taskId}/attachments")
-    public ResponseEntity<TaskAttachmentDto> uploadFile(
+    @PostMapping("/{taskId}/attachments/url")
+    public TaskAttachmentDto addAttachmentUrl(
             @PathVariable UUID taskId,
-            @RequestParam("file") MultipartFile file
+            @RequestBody TaskAttachmentUrlRequest request
     ) {
-        try {
-            TaskAttachment savedAttachment = attachmentService.uploadAttachment(taskId, file);
-
-            return ResponseEntity.ok(TaskAttachmentDto.from(savedAttachment));
-
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+        TaskAttachment savedAttachment = attachmentService.saveAttachmentUrl(taskId, request);
+        return TaskAttachmentDto.from(savedAttachment);
     }
 
     @DeleteMapping("/attachments/{attachmentId}")
-    public ResponseEntity<Void> deleteAttachment(@PathVariable UUID attachmentId) {
-
+    public void deleteAttachment(@PathVariable UUID attachmentId) {
         attachmentService.deleteAttachment(attachmentId);
-
-        return ResponseEntity.noContent().build();
     }
 }

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { TaskComment } from '../models/task-model';
+import { TaskAttachment, TaskComment } from '../models/task-model';
 
 @Injectable({
   providedIn: 'root',
@@ -61,4 +61,12 @@ export class TaskService {
   deleteAttachment(attachmentId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/attachments/${attachmentId}`);
   }
+
+  addAttachmentUrl(taskId: string, fileName: string, fileUrl: string): Observable<TaskAttachment> {
+  const body = { fileName, fileUrl };
+  return this.http.post<TaskAttachment>(
+    `${this.baseUrl}/${taskId}/attachments/url`, 
+    body
+  );
+}
 }

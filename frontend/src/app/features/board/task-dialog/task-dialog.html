@@ -49,21 +49,43 @@
     <mat-divider></mat-divider>
 
     <div class="attachments-block">
-      <h3><mat-icon>attach_file</mat-icon> Anhänge</h3>
-      <div class="file-list">
-        <div *ngFor="let file of task.attachments" class="file-item">
-          <mat-icon>insert_drive_file</mat-icon>
-          <a [href]="file.fileUrl" target="_blank">{{ file.fileName }}</a>
-          
-          <button mat-icon-button color="warn" (click)="deleteAttachment(file)">
-            <mat-icon>delete_outline</mat-icon>
-          </button>
+      <div class="block-header">
+        <h3><mat-icon>attach_file</mat-icon> Anhänge ({{ task.attachments?.length || 0 }})</h3>
+        <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none">
+        <button mat-stroked-button (click)="fileInput.click()" class="upload-btn">
+          <mat-icon>add</mat-icon> Datei hochladen
+        </button>
+      </div>
+
+      <div class="attachment-grid">
+        <div *ngFor="let file of task.attachments" class="attachment-card">
+          <div class="preview-area" *ngIf="isImage(file.fileName)">
+            <img [src]="file.fileUrl" [alt]="file.fileName">
+          </div>
+          <div class="preview-area file-icon-wrapper" *ngIf="!isImage(file.fileName)">
+            <mat-icon class="file-type-icon">insert_drive_file</mat-icon>
+          </div>
+
+          <div class="attachment-info">
+            <span class="file-name-label" [matTooltip]="file.fileName">{{ file.fileName }}</span>
+            <div class="action-bar">
+              <button *ngIf="isImage(file.fileName)" mat-icon-button (click)="openFullImage(file.fileUrl)" title="Vollbild">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <div *ngIf="!isImage(file.fileName)" class="spacer"></div>
+              
+              <div class="right-actions">
+                <button mat-icon-button (click)="downloadFile(file)" color="primary" title="Download">
+                  <mat-icon>download</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="onDeleteAttachment(file)" title="Löschen">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none">
-      <button mat-stroked-button (click)="fileInput.click()">
-        <mat-icon>add</mat-icon> Datei hochladen
-      </button>
     </div>
 
     <mat-divider></mat-divider>
@@ -95,14 +117,14 @@
 <mat-dialog-actions>
   <div class="actions-container">
     <div class="left-actions">
-      <button *ngIf="isEditMode && !showConfirmDelete" 
-              mat-stroked-button color="warn" (click)="onDelete()" class="delete-btn">
-        <mat-icon>delete_outline</mat-icon> Löschen
-      </button>
-      <button *ngIf="showConfirmDelete" 
-              mat-raised-button color="warn" (click)="onDelete()" (mouseleave)="resetDelete()" class="confirm-delete-btn">
-        Wirklich löschen?
-      </button>
+      <ng-container *ngIf="isEditMode">
+        <button *ngIf="!showConfirmDelete" mat-stroked-button color="warn" (click)="onDelete()" class="delete-btn">
+          <mat-icon>delete_outline</mat-icon> Löschen
+        </button>
+        <button *ngIf="showConfirmDelete" mat-raised-button color="warn" (click)="onDelete()" (mouseleave)="resetDelete()" class="confirm-delete-btn">
+          Wirklich löschen?
+        </button>
+      </ng-container>
     </div>
     <div class="right-actions">
       <button mat-raised-button color="primary" (click)="onSave()" 

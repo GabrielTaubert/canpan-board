@@ -77,7 +77,7 @@ describe('TaskDialog', () => {
   it('should delete an attachment from service and storage', async () => {
     await setupTest({ task: { id: 't1', attachments: [{ id: 'a1', fileUrl: 'url1' }] }, columnId: 'c1' });
     
-    component.deleteAttachment({ id: 'a1', fileUrl: 'url1' } as any);
+    component.onDeleteAttachment({ id: 'a1', fileUrl: 'url1' } as any);
 
     expect(mockTaskService.deleteAttachment).toHaveBeenCalledWith('a1');
     // Warten auf das asynchrone deleteFile im subscribe

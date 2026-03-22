@@ -15,6 +15,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatCardModule } from '@angular/material/card';
 import { MatSpinner } from '@angular/material/progress-spinner';
 import { StorageService } from '../../../core/services/storage.service';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-task-dialog',
@@ -29,7 +30,8 @@ import { StorageService } from '../../../core/services/storage.service';
     MatIconModule,
     MatDividerModule,
     MatCardModule,
-    MatSpinner
+    MatSpinner,
+    MatTooltipModule
   ],
   templateUrl: './task-dialog.html',
   styleUrl: './task-dialog.scss',
@@ -125,47 +127,102 @@ export class TaskDialog {
     this.isLoadingDetails = true;
 
     try {
-      // 1. Datei zu Supabase hochladen
+      // Schritt 1: Datei zu Supabase (S3) hochladen
       const publicUrl = await this.storageService.uploadFile(file, this.task.id);
-      console.log('Erfolgreich hochgeladen! URL:', publicUrl);
+      console.log('Upload zu Supabase erfolgreich:', publicUrl);
 
-      // 2. Dem Java-Backend Bescheid geben (morgen!)
-      /* this.taskService.addAttachmentUrl(this.task.id, file.name, publicUrl).subscribe({
-        next: (newAttachment) => {
-           this.task.attachments?.push(newAttachment);
-           this.isLoadingDetails = false;
+      // Schritt 2: Die URL an dein Java-Backend senden
+      this.taskService.addAttachmentUrl(this.task.id, file.name, publicUrl).subscribe({
+        next: (newAttachment: any) => {
+          // Schritt 3: UI aktualisieren
+          if (!this.task.attachments) this.task.attachments = [];
+          this.task.attachments.push(newAttachment);
+          this.isLoadingDetails = false;
         },
-        error: () => this.isLoadingDetails = false
+        error: (err: any) => {
+          console.error('Backend-Update fehlgeschlagen:', err);
+          this.isLoadingDetails = false;
+          alert('Die Datei wurde hochgeladen, aber der Link konnte nicht im Task gespeichert werden.');
+        }
       });
-      */
-      
-      // Für heute zum Testen: Einfach lokal anzeigen
-      if (!this.task.attachments) this.task.attachments = [];
-      this.task.attachments.push({ id: 'temp-id', fileName: file.name, fileUrl: publicUrl });
-      this.isLoadingDetails = false;
 
     } catch (err: any) {
-      alert('Fehler beim Upload: ' + err.message);
+      alert('Fehler beim Supabase-Upload: ' + err.message);
       this.isLoadingDetails = false;
     }
   }
 
-  deleteAttachment(attachment: TaskAttachment): void {
-  if (!this.task.id) return;
+  onDeleteAttachment(attachment: TaskAttachment): void {
+    // 1. Sicherheitsabfrage
+    if (!confirm(`Möchtest du "${attachment.fileName}" wirklich unwiderruflich löschen?`)) {
+      return;
+    }
 
-  this.taskService.deleteAttachment(attachment.id).subscribe({
-    next: async () => {
-      try {
-        await this.storageService.deleteFile(attachment.fileUrl);
+    // 2. Schritt: Aus der Datenbank löschen (Java Backend)
+    this.taskService.deleteAttachment(attachment.id).subscribe({
+      next: async () => {
+        console.log('DB-Eintrag erfolgreich gelöscht');
         
-        this.task.attachments = this.task.attachments?.filter(a => a.id !== attachment.id);
-      } catch (err) {
-        // Auch wenn S3 fehlschlägt, ist der DB-Eintrag weg, 
-        // also wird er auch entfernt
-        this.task.attachments = this.task.attachments?.filter(a => a.id !== attachment.id);
+        try {
+          // 3. Schritt: Aus dem Supabase Storage löschen
+          // Wir übergeben die URL, der StorageService extrahiert den Pfad
+          await this.storageService.deleteFile(attachment.fileUrl);
+          console.log('Datei aus Storage gelöscht');
+        } catch (err) {
+          // Falls S3/Supabase fehlschlägt, loggen wir es nur, 
+          // da der DB-Eintrag eh schon weg ist.
+          console.warn('Hinweis: Datei konnte nicht aus Storage gelöscht werden (evtl. schon weg)', err);
+        } finally {
+          // 4. Schritt: UI aktualisieren (egal ob S3-Löschen klappte oder nicht)
+          this.task.attachments = this.task.attachments?.filter(a => a.id !== attachment.id);
+        }
+      },
+      error: (err: any) => {
+        console.error('Konnte Datenbankeintrag nicht löschen', err);
+        alert('Fehler: Der Anhang konnte nicht gelöscht werden.');
       }
-    },
-    error: (err) => console.error('Konnte Datenbankeintrag nicht löschen', err)
-  });
-}
+    });
+  }
+
+  // Prüft, ob die Datei ein Bild ist
+  isImage(fileName: string): boolean {
+    const extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    return extensions.some(ext => fileName.toLowerCase().endsWith(ext));
+  }
+
+  // Öffnet das Bild in einem neuen Tab (Full Size)
+  openFullImage(url: string) {
+    window.open(url, '_blank');
+  }
+
+  downloadFile(file: TaskAttachment): void {
+    console.log(`Starte echten Download für: ${file.fileName}`);
+
+    // 1. Die Datei per HTTP als Blob (Binärdaten) anfordern
+    fetch(file.fileUrl)
+      .then(response => response.blob())
+      .then(blob => {
+        // 2. Eine lokale URL für diesen Datenstrom erzeugen
+        const blobUrl = window.URL.createObjectURL(blob);
+        
+        // 3. Den "unsichtbaren Link" Trick anwenden
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = file.fileName; // Jetzt MUSS der Browser den Namen nehmen
+        
+        document.body.appendChild(link);
+        link.click();
+        
+        // 4. Aufräumen
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl); 
+        
+        console.log('Download erfolgreich getriggert');
+      })
+      .catch(err => {
+        console.error('Download fehlgeschlagen:', err);
+        // Fallback: Falls Blob fehlschlägt, zumindest im neuen Tab öffnen
+        window.open(file.fileUrl, '_blank');
+      });
+  }
 }

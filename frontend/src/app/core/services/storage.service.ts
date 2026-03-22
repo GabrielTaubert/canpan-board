@@ -31,19 +31,30 @@ export class StorageService {
     return urlData.publicUrl;
   }
 
-  async deleteFile(fileUrl: string): Promise<void> {
-    const parts = fileUrl.split('/task-attachments/');
-    if (parts.length < 2) return;
+  async deleteFile(fileUrl: string) {
+    const bucketName = 'task-attachments';
+    const urlParts = fileUrl.split(`${bucketName}/`);
+    
+    if (urlParts.length < 2) return;
 
-    const filePath = parts[1];
+    const encodedPath = urlParts[1];
+    const filePath = decodeURIComponent(encodedPath); 
 
-    const { error } = await this.supabase.storage
-      .from('task-attachments')
+    console.log("Versuche physisch zu löschen:", filePath);
+
+    const { data, error } = await this.supabase.storage
+      .from(bucketName)
       .remove([filePath]);
 
     if (error) {
-      console.error('Fehler beim Löschen in Supabase:', error);
+      console.error("Supabase Storage Fehler:", error);
       throw error;
     }
+
+    if (data && data.length === 0) {
+      console.warn("Datei wurde im Storage nicht gefunden. Pfad-Check erforderlich!");
+    }
+
+    return data;
   }
 }
