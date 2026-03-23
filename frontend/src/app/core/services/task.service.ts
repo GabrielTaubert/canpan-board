@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { TaskAttachment, TaskComment } from '../models/task-model';
+import { TaskAttachment, TaskComment, TaskLabel } from '../models/task-model';
 
 @Injectable({
   providedIn: 'root',
@@ -46,8 +46,13 @@ export class TaskService {
   }
 
   // --- Labels ---
-  setLabel(taskId: string, labelRequest: any): Observable<any> {
-    return this.http.put<any>(`${this.baseUrl}/${taskId}/label`, labelRequest);
+  setLabel(taskId: string, labelText: string, color: string): Observable<TaskLabel> {
+    const body = { labelText, color };
+    return this.http.put<TaskLabel>(`${environment.apiUrl}/tasks/${taskId}/label`, body);
+  }
+
+  removeLabel(taskId: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/tasks/${taskId}/label`);
   }
 
   // --- Attachments ---

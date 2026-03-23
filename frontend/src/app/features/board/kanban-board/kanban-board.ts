@@ -72,7 +72,6 @@ export class KanbanBoard implements OnInit {
   loadProjectData(): void {
     this.projectService.getProjects().subscribe({
       next: (projects: Project[]) => {
-        // Wir suchen das Projekt, dessen ID mit der aus der Route übereinstimmt
         const currentProject = projects.find(p => p.id === this.projectId);
         if (currentProject) {
           this.project = currentProject;
@@ -140,7 +139,8 @@ export class KanbanBoard implements OnInit {
       data: { 
         task: task, 
         columnId: columnId, 
-        projectId: this.projectId
+        projectId: this.projectId,
+        allProjectTasks: this.allTasks
       }
     });
 

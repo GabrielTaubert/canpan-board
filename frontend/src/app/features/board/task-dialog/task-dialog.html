@@ -61,6 +61,52 @@
       <mat-icon matSuffix>group</mat-icon>
     </mat-form-field>
 
+    <div class="label-section" *ngIf="isEditMode">
+      <div class="section-label">
+        <mat-icon>label</mat-icon>
+        <span>Label</span>
+      </div>
+
+      <div class="active-label-wrapper" *ngIf="task.label">
+        <div class="task-label-chip shadow-sm" [style.background-color]="task.label.color">
+          <span class="label-text">{{ task.label.labelText }}</span>
+          <button mat-icon-button (click)="removeLabel()" matTooltip="Label entfernen">
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="label-management" *ngIf="!task.label">
+        <div class="label-input-group">
+          <mat-form-field appearance="outline" class="label-text-field">
+            <mat-label>Neues Label...</mat-label>
+            <input matInput [(ngModel)]="labelInput.text" (keyup.enter)="applyLabel(labelInput.text, labelInput.color)">
+          </mat-form-field>
+          
+          <div class="color-picker-wrapper" matTooltip="Farbe wählen">
+            <input type="color" [(ngModel)]="labelInput.color">
+          </div>
+
+          <button mat-mini-fab color="primary" [disabled]="!labelInput.text" (click)="applyLabel(labelInput.text, labelInput.color)">
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+
+        <div class="label-suggestions" *ngIf="!task.label && existingLabels.length > 0">
+          <span class="suggestion-title">Vorschläge:</span>
+          <div class="suggestion-list">
+            <div class="suggestion-badge" 
+                *ngFor="let exLabel of existingLabels" 
+                [style.border-color]="exLabel.color"
+                (click)="selectExistingLabel(exLabel)">
+              <span class="dot" [style.background-color]="exLabel.color"></span>
+              {{ exLabel.labelText }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="info-row" *ngIf="isEditMode">
       <div class="info-chip">
         <mat-icon>view_column</mat-icon>
@@ -74,104 +120,5 @@
     </mat-form-field>
   </div>
 
-  <div *ngIf="isLoadingDetails" class="loading-spinner">
-    <mat-spinner diameter="30"></mat-spinner>
-    <span>Lade Details...</span>
-  </div>
-
-  <div *ngIf="isEditMode && !isLoadingDetails" class="details-section">
-    <mat-divider></mat-divider>
-
-    <div class="attachments-block">
-      <div class="block-header">
-        <h3><mat-icon>attach_file</mat-icon> Anhänge ({{ task.attachments?.length || 0 }})</h3>
-        <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none">
-        <button mat-stroked-button (click)="fileInput.click()" class="upload-btn">
-          <mat-icon>add</mat-icon> Datei hochladen
-        </button>
-      </div>
-
-      <div class="attachment-grid">
-        <div *ngFor="let file of task.attachments" class="attachment-card">
-          <div class="preview-area" *ngIf="isImage(file.fileName)">
-            <img [src]="file.fileUrl" [alt]="file.fileName">
-          </div>
-          <div class="preview-area file-icon-wrapper" *ngIf="!isImage(file.fileName)">
-            <mat-icon class="file-type-icon">insert_drive_file</mat-icon>
-          </div>
-          <div class="attachment-info">
-            <span class="file-name-label" [matTooltip]="file.fileName">{{ file.fileName }}</span>
-            <div class="action-bar">
-              <button *ngIf="isImage(file.fileName)" mat-icon-button (click)="openFullImage(file.fileUrl)" title="Vollbild">
-                <mat-icon>visibility</mat-icon>
-              </button>
-              <div class="spacer" *ngIf="!isImage(file.fileName)"></div>
-              <div class="right-actions">
-                <button mat-icon-button (click)="downloadFile(file)" color="primary" title="Download">
-                  <mat-icon>download</mat-icon>
-                </button>
-                <button mat-icon-button color="warn" (click)="onDeleteAttachment(file)" title="Löschen">
-                  <mat-icon>delete_outline</mat-icon>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <mat-divider></mat-divider>
-
-    <div class="comments-block">
-      <h3><mat-icon>chat_bubble_outline</mat-icon> Kommentare ({{ task.comments?.length || 0 }})</h3>
-      <div class="comment-list">
-        <div *ngFor="let comment of task.comments" class="comment-item">
-          <div class="user-avatar" [style.background-color]="userHelper.getAvatarColor(comment.authorName)">
-            {{ (comment.authorName ? comment.authorName[0] : 'U') | uppercase }}
-          </div>
-          <div class="comment-content-wrapper">
-            <div class="comment-header">
-              <span class="author">{{ userHelper.getShortName(comment.authorName) }}</span>
-              <span class="date">{{ comment.createdAt | date:'short' }}</span>
-            </div>
-            <div class="comment-body">{{ comment.content }}</div>
-          </div>
-        </div>
-      </div>
-      
-      <mat-form-field appearance="outline" class="full-width comment-input">
-        <mat-label>Kommentar hinzufügen...</mat-label>
-        <textarea matInput [(ngModel)]="newCommentContent" rows="2" placeholder="Deine Nachricht..."></textarea>
-        <button mat-icon-button matSuffix color="primary" (click)="addComment()" [disabled]="!newCommentContent.trim()">
-          <mat-icon>send</mat-icon>
-        </button>
-      </mat-form-field>
-    </div>
-
-    <div class="time-footer">
-      <span>Erstellt: {{ task.createdAt | date:'short' }}</span>
-      <span *ngIf="task.updatedAt">Zuletzt geändert: {{ task.updatedAt | date:'short' }}</span>
-    </div>
-  </div> 
-</mat-dialog-content> 
-
-<mat-dialog-actions>
-  <div class="actions-container">
-    <div class="left-actions">
-      <ng-container *ngIf="isEditMode">
-        <button *ngIf="!showConfirmDelete" mat-stroked-button color="warn" (click)="onDelete()" class="delete-btn">
-          <mat-icon>delete_outline</mat-icon> Löschen
-        </button>
-        <button *ngIf="showConfirmDelete" mat-raised-button color="warn" (click)="onDelete()" (mouseleave)="resetDelete()" class="confirm-delete-btn">
-          Wirklich löschen?
-        </button>
-      </ng-container>
-    </div>
-    <div class="right-actions">
-      <button mat-raised-button color="primary" (click)="onSave()" 
-              [disabled]="!task.title || showConfirmDelete" class="save-btn">
-        {{ isEditMode ? 'Änderungen speichern' : 'Task hinzufügen' }}
-      </button>
-    </div>
-  </div>
-</mat-dialog-actions>
+  ...
+</mat-dialog-content>
