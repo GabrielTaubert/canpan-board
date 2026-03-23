@@ -186,6 +186,80 @@ mat-dialog-content {
   }
 }
 
+// Labels
+.label-section {
+  margin-bottom: 20px;
+  
+  mat-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #64748b;
+  }
+}
+
+.task-label-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+    cursor: pointer;
+    opacity: 0.8;
+    &:hover { opacity: 1; }
+  }
+}
+
+.label-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  
+  mat-form-field { flex: 1; }
+  .color-picker-mini {
+    border: none;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    background: none;
+  }
+}
+
+.existing-labels-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  align-items: center;
+
+  .suggestion-hint { font-size: 11px; color: #94a3b8; }
+
+  .suggestion-chip {
+    font-size: 11px;
+    padding: 2px 8px;
+    border: 1px solid;
+    border-radius: 10px;
+    cursor: pointer;
+    color: #64748b;
+    transition: all 0.2s;
+    
+    &:hover {
+      background-color: #f1f5f9;
+      transform: translateY(-1px);
+    }
+  }
+}
+
 // Header und Actions
 .dialog-header {
   display: flex;

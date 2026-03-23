@@ -6,14 +6,12 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { Task, TaskAttachment } from '../../../core/models/task-model';
+import { Task, TaskAttachment, TaskLabel } from '../../../core/models/task-model';
 import { MatIconModule } from '@angular/material/icon';
 import { TaskService } from '../../../core/services/task.service';
-import { Observable, switchMap, take } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatCardModule } from '@angular/material/card';
-import { MatSpinner } from '@angular/material/progress-spinner';
 import { StorageService } from '../../../core/services/storage.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Member } from '../../../core/models/project.model';
@@ -33,7 +31,6 @@ import { UserHelperService } from '../../../core/services/utils/user-helper.serv
     MatIconModule,
     MatDividerModule,
     MatCardModule,
-    MatSpinner,
     MatTooltipModule
   ],
   templateUrl: './task-dialog.html',
@@ -46,6 +43,9 @@ export class TaskDialog {
   isLoadingDetails = false;
   members: Member[] = [];
   projectId: string;
+
+  labelInput = { text: '', color: '#3f51b5' };
+  existingLabels: TaskLabel[] = [];
   
   newCommentContent = '';
 
@@ -67,6 +67,7 @@ export class TaskDialog {
   ngOnInit(): void {
     if (this.projectId) {
       this.loadMembers();
+      this.collectExistingLabels();
     } else {
       console.error('TaskDialog: Keine projectId übergeben!');
     }
@@ -78,6 +79,7 @@ export class TaskDialog {
         next: (fullTask) => {
           this.task = { ...this.task, ...fullTask }; // Daten mergen
           this.isLoadingDetails = false;
+          this.collectExistingLabels();
         },
         error: () => this.isLoadingDetails = false
       });
@@ -91,6 +93,56 @@ export class TaskDialog {
       },
       error: (err) => console.error('Fehler beim Laden der Member', err)
     });
+  }
+
+  collectExistingLabels(): void {
+    const rawTasks = this.data?.allProjectTasks || [];
+    console.log('Anzahl Tasks im Dialog:', rawTasks.length);
+    
+    // Schau dir den ERSTEN Task genau an, ob er ein Label hat
+    if (rawTasks.length > 0) {
+      console.log('Struktur des ersten Tasks:', rawTasks[0]);
+    }
+
+    const labels = rawTasks
+      .map((t: any) => {
+        // Prüfe, ob das Feld vielleicht anders heißt (z.B. taskLabel statt label)
+        return t.label || t.taskLabel || t.labels; 
+      })
+      .filter((l: any) => {
+        const isValid = l && (l.labelText || l.text);
+        if (l && !isValid) console.warn('Label gefunden, aber Felder (labelText) fehlen:', l);
+        return isValid;
+      });
+
+    const uniqueMap = new Map();
+    labels.forEach((l: any) => {
+      const text = (l.labelText || l.text || '').trim().toLowerCase();
+      if (text) uniqueMap.set(text, l);
+    });
+
+    this.existingLabels = Array.from(uniqueMap.values());
+    console.log('Endergebnis Vorschläge:', this.existingLabels);
+  }
+
+  applyLabel(labelText: string, color: string): void {
+    if (!this.task.id) return;
+    
+    this.taskService.setLabel(this.task.id, labelText, color).subscribe(newLabel => {
+      this.task.label = newLabel;
+      this.labelInput.text = '';
+    });
+  }
+
+  removeLabel(): void {
+    if (!this.task.id) return;
+    this.taskService.removeLabel(this.task.id).subscribe(() => {
+      this.task.label = undefined;
+    });
+  }
+
+  selectExistingLabel(label: TaskLabel): void {
+    this.applyLabel(label.labelText, label.color);
   }
 
   onCancel(): void {
