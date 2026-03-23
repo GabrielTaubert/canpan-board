@@ -13,18 +13,26 @@ import { ColumnDialog } from '../column-dialog/column-dialog';
 import { ColumnService } from '../../../core/services/column.service';
 import { switchMap } from 'rxjs';
 import { TaskService } from '../../../core/services/task.service';
+import { TaskList } from '../task-list/task-list';
 
 @Component({
   selector: 'app-kanban-board',
-  imports: [CommonModule, KanbanColumn, DragDropModule, MatTooltipModule, MatIconModule],
+  imports: [
+    CommonModule,
+    KanbanColumn,
+    DragDropModule,
+    MatTooltipModule,
+    MatIconModule,
+    TaskList
+  ],
   templateUrl: './kanban-board.html',
   styleUrl: './kanban-board.scss',
 })
 export class KanbanBoard implements OnInit {
   allTasks: Task[] = [];
   columns: Column[] = [];
-
   projectId: string | null = null;
+  viewMode: 'kanban' | 'list' = 'kanban';
 
   constructor(
     private taskService: TaskService,

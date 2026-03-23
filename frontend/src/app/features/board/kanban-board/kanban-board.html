@@ -1,5 +1,22 @@
 <div class="board-header">
-  <h2>Your Board</h2>
+  <div class="header-left">
+    <h2>Your Board</h2>
+    
+    <div class="view-toggle">
+      <button mat-icon-button 
+              [class.active]="viewMode === 'kanban'" 
+              (click)="viewMode = 'kanban'"
+              matTooltip="Board Ansicht">
+        <mat-icon>view_kanban</mat-icon>
+      </button>
+      <button mat-icon-button 
+              [class.active]="viewMode === 'list'" 
+              (click)="viewMode = 'list'"
+              matTooltip="Listen Ansicht">
+        <mat-icon>view_list</mat-icon>
+      </button>
+    </div>
+  </div>
   
   <div class="header-actions">
     <mat-icon 
@@ -15,16 +32,27 @@
   </div>
 </div>
 
-<div class="board-layout" cdkDropListGroup>
-  <app-kanban-column
-    *ngFor="let col of sortedColumns"
-    [title]="col.name"
-    [canEdit]="!col.isSystem"
-    [columnId]="col.id" 
-    [tasks]="getTasksByColumn(col.id)" 
-    (taskDropped)="handleTaskDrop($event, col.id)"
-    (addTask)="openTaskDialog(undefined, col.id)"
-    (editTask)="openTaskDialog($event)"
-    (renameColumn)="openColumnDialog(col)">
-  </app-kanban-column>
+<div class="content-wrapper">
+  
+  <div class="board-layout" cdkDropListGroup *ngIf="viewMode === 'kanban'">
+    <app-kanban-column
+      *ngFor="let col of sortedColumns"
+      [title]="col.name"
+      [canEdit]="!col.isSystem"
+      [columnId]="col.id" 
+      [tasks]="getTasksByColumn(col.id)" 
+      (taskDropped)="handleTaskDrop($event, col.id)"
+      (addTask)="openTaskDialog(undefined, col.id)"
+      (editTask)="openTaskDialog($event)"
+      (renameColumn)="openColumnDialog(col)">
+    </app-kanban-column>
+  </div>
+
+  <app-task-list 
+    *ngIf="viewMode === 'list'"
+    [tasks]="allTasks"
+    [columns]="sortedColumns"
+    (editTask)="openTaskDialog($event)">
+  </app-task-list>
+
 </div>
