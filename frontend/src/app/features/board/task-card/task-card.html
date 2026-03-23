@@ -1,6 +1,22 @@
-<div class="task-card" draggable="false">
+<div class="task-card" cdkDrag [cdkDragData]="task">
+
+  <div class="priority-strip" [attr.data-priority]="task.priority"></div>
+  
+  <div class="card-content">
     <h3>{{ task.title }}</h3>
-    <span class="priority-badge" [attr.data-priority]="task.priority">
+    
+    <p class="description-preview" *ngIf="task.description">
+      {{ task.description }}
+    </p>
+
+    <div class="card-footer">
+      <span class="priority-badge" [attr.data-priority]="task.priority">
         {{ task.priority }}
-    </span>
+      </span>
+
+      <div class="assignee-avatar" *ngIf="task.assignedTo" [matTooltip]="task.assignedTo">
+        {{ task.assignedTo[0] | uppercase }}
+      </div>
+    </div>
+  </div>
 </div>

@@ -16,6 +16,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatSpinner } from '@angular/material/progress-spinner';
 import { StorageService } from '../../../core/services/storage.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { Member } from '../../../core/models/project.model';
+import { MemberService } from '../../../core/services/member';
 
 @Component({
   selector: 'app-task-dialog',
@@ -41,22 +43,32 @@ export class TaskDialog {
   isEditMode: boolean;
   showConfirmDelete = false;
   isLoadingDetails = false;
+  members: Member[] = [];
+  projectId: string;
   
   newCommentContent = '';
 
   constructor(
     public dialogRef: MatDialogRef<TaskDialog>,
-    @Inject(MAT_DIALOG_DATA) public data: { task?: Task, columnId: string },
+    @Inject(MAT_DIALOG_DATA) public data: any,
     private taskService: TaskService,
     private authService: AuthService,
-    private storageService: StorageService
+    private storageService: StorageService,
+    private memberService: MemberService
   ) {
     this.isEditMode = !!data.task;
     // Basis-Daten übernehmen
+    this.projectId = data.projectId;
     this.task = data.task ? { ...data.task } : { columnId: data.columnId, priority: 'MEDIUM', description: '' };
   }
 
   ngOnInit(): void {
+    if (this.projectId) {
+      this.loadMembers();
+    } else {
+      console.error('TaskDialog: Keine projectId übergeben!');
+    }
+    
     // Wenn wir editieren, laden wir sofort die vollständigen Details nach
     if (this.isEditMode && this.task.id) {
       this.isLoadingDetails = true;
@@ -68,6 +80,15 @@ export class TaskDialog {
         error: () => this.isLoadingDetails = false
       });
     }
+  }
+
+  loadMembers(): void {
+    this.memberService.getMembers(this.projectId).subscribe({
+      next: (members) => {
+        this.members = members;
+      },
+      error: (err) => console.error('Fehler beim Laden der Member', err)
+    });
   }
 
   onCancel(): void {

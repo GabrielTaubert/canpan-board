@@ -2,17 +2,16 @@ export interface Task {
   id: string;
   title: string;
   description: string;
+  columnId: string;    // Wichtig für den Move-Request
+  columnName?: string
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
   storypoints?: number;
-  columnId: string;    // Wichtig für den Move-Request
-  assignedTo?: any;     // Später ein User-Objekt
-  
-  // Diese Felder kommen nur im DetailDto vor:
+  assignedTo?: string;
+  createdAt?: string;
+  updatedAt?: string; 
   label?: TaskLabel;
   attachments?: TaskAttachment[];
   comments?: TaskComment[];
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface TaskLabel {

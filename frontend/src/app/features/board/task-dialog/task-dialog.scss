@@ -33,6 +33,38 @@ mat-dialog-content {
   padding: 20px 0;
 }
 
+.meta-row {
+  display: flex;
+  gap: 16px;
+  mat-form-field { flex: 1; }
+}
+
+.info-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  
+  .info-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    background: #f1f5f9;
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: #475569;
+    mat-icon { font-size: 16px; width: 16px; height: 16px; }
+  }
+}
+
+.time-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 20px;
+}
+
 // Attachments
 .attachment-grid {
   display: grid;
