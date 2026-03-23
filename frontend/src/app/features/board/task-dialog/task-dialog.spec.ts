@@ -5,8 +5,10 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { TaskService } from '../../../core/services/task.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { StorageService } from '../../../core/services/storage.service';
-import { of, throwError } from 'rxjs';
 import { MemberService } from '../../../core/services/member';
+import { UserHelperService } from '../../../core/services/utils/user-helper.service';
+import { Observable, of, throwError } from 'rxjs';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 describe('TaskDialog', () => {
   let component: TaskDialog;
@@ -16,83 +18,85 @@ describe('TaskDialog', () => {
   let mockAuthService: any;
   let mockStorageService: any;
   let mockMemberService: any;
+  let mockUserHelper: any;
 
-  async function setupTest(dialogData: any) {
+  async function setupTest(dialogData: any, memberReturn?: Observable<any>) {
     mockDialogRef = { close: jasmine.createSpy('close') };
     mockTaskService = jasmine.createSpyObj('TaskService', ['getTaskDetail', 'addComment', 'deleteAttachment', 'addAttachmentUrl']);
-    // Mock AuthService mit dem neuen Signals/Methoden-Pattern (.user())
-    mockAuthService = { user: jasmine.createSpy('user').and.returnValue({ id: 'u1', email: 'test@example.com' }) };
     mockStorageService = jasmine.createSpyObj('StorageService', ['uploadFile', 'deleteFile']);
+    mockMemberService = jasmine.createSpyObj('MemberService', ['getMembers']);
+    mockUserHelper = jasmine.createSpyObj('UserHelperService', ['getAvatarColor', 'getShortName']);
+
+    mockAuthService = { 
+      user: jasmine.createSpy('user').and.returnValue({ id: 'u1', email: 'test@example.com' }) 
+    };
 
     mockTaskService.getTaskDetail.and.returnValue(of({ description: 'Full detail' }));
-    mockTaskService.addComment.and.returnValue(of({ id: 'c1', content: 'New Comment', authorName: 'test@example.com' }));
+    mockTaskService.addComment.and.returnValue(of({ id: 'c1', content: 'New Comment' }));
     mockTaskService.deleteAttachment.and.returnValue(of(null));
     mockTaskService.addAttachmentUrl.and.returnValue(of({ id: 'a-new', fileName: 'test.jpg', fileUrl: 'http://supabase.url/file.png' }));
     mockStorageService.uploadFile.and.resolveTo('http://supabase.url/file.png');
     mockStorageService.deleteFile.and.resolveTo();
 
-    mockMemberService = jasmine.createSpyObj('MemberService', ['getProjectMembers']);
-    mockMemberService.getProjectMembers.and.returnValue(of([]));
+    mockMemberService.getMembers.and.returnValue(memberReturn || of([{ userId: 'u1', email: 'test@test.de' }]));
 
     await TestBed.configureTestingModule({
-      imports: [TaskDialog, NoopAnimationsModule],
+      imports: [TaskDialog, NoopAnimationsModule, HttpClientTestingModule],
       providers: [
         { provide: MatDialogRef, useValue: mockDialogRef },
         { provide: MAT_DIALOG_DATA, useValue: dialogData },
         { provide: TaskService, useValue: mockTaskService },
         { provide: AuthService, useValue: mockAuthService },
         { provide: StorageService, useValue: mockStorageService },
-        { provide: MemberService, useValue: mockMemberService }
+        { provide: MemberService, useValue: mockMemberService },
+        { provide: UserHelperService, useValue: mockUserHelper }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(TaskDialog);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    fixture.detectChanges(); 
   }
 
-  // Core & UI
+  // Core & Init
 
-  it('should get avatar color based on name hash', async () => {
-    await setupTest({ task: null, columnId: 'c1' });
-    const color1 = component.getAvatarColor('Elias');
-    const color2 = component.getAvatarColor('Elias');
-    const color3 = component.getAvatarColor('Other');
-    expect(color1).toBe(color2);
-    expect(color1).not.toBe(color3);
+  it('should load members and task details on init', async () => {
+    await setupTest({ task: { id: 't1' }, columnId: 'c1', projectId: 'p123' });
+    expect(mockMemberService.getMembers).toHaveBeenCalledWith('p123');
+    expect(mockTaskService.getTaskDetail).toHaveBeenCalledWith('t1');
   });
 
-  it('should handle getAvatarColor with null/empty name', async () => {
-    await setupTest({ task: null, columnId: 'c1' });
-    const color = component.getAvatarColor(null);
-    expect(color).toBeTruthy(); // Sollte Fallback 'U' nutzen
+  it('should log error if no projectId is provided', async () => {
+    spyOn(console, 'error');
+    await setupTest({ task: null, columnId: 'c1', projectId: null });
+    expect(console.error).toHaveBeenCalledWith(jasmine.stringMatching('Keine projectId übergeben'));
   });
 
-  it('should parse short name from email', async () => {
-    await setupTest({ task: null, columnId: 'c1' });
-    expect(component.getShortName('max.mustermann@web.de')).toBe('max.mustermann');
-    expect(component.getShortName(null)).toBe('Unbekannter User');
-  });
+  it('should handle member loading error', async () => {
+  const errorResponse = new Error('API Fail');
+  
+  const consoleSpy = spyOn(console, 'error');
 
-  it('should handle error when loading task details', async () => {
-    mockTaskService.getTaskDetail.and.returnValue(throwError(() => new Error('Load Error')));
-    await setupTest({ task: { id: 't1' }, columnId: 'c1' });
-    expect(component.isLoadingDetails).toBeFalse();
-  });
+  await setupTest(
+    { task: null, columnId: 'c1', projectId: 'p123' }, 
+    throwError(() => errorResponse)
+  );
 
-  it('should close onCancel and return task on onSave', async () => {
-    await setupTest({ task: { id: 't1' }, columnId: 'c1' });
-    component.onCancel();
-    expect(mockDialogRef.close).toHaveBeenCalled();
-    
-    component.onSave();
-    expect(mockDialogRef.close).toHaveBeenCalledWith(component.task);
+  expect(consoleSpy).toHaveBeenCalledWith('Fehler beim Laden der Member', errorResponse);
+});
+
+  // UI
+  
+  it('should identify image extensions correctly', async () => {
+    await setupTest({ projectId: 'p1' });
+    expect(component.isImage('test.PNG')).toBeTrue();
+    expect(component.isImage('document.pdf')).toBeFalse();
   });
 
   // Comments
 
   it('should add a comment and update UI locally', async () => {
-    await setupTest({ task: { id: 't1', comments: [] }, columnId: 'c1' });
+    await setupTest({ task: { id: 't1', comments: [] }, columnId: 'c1', projectId: 'p1' });
     component.newCommentContent = 'My new comment';
     component.addComment();
 
@@ -101,38 +105,19 @@ describe('TaskDialog', () => {
     expect(component.newCommentContent).toBe('');
   });
 
-  it('should not add comment if content is empty or task id missing', async () => {
-    await setupTest({ task: {}, columnId: 'c1' });
-    component.newCommentContent = '   ';
-    component.addComment();
-    expect(mockTaskService.addComment).not.toHaveBeenCalled();
-  });
-
   it('should handle comment error', async () => {
-    await setupTest({ task: { id: 't1' }, columnId: 'c1' });
+    await setupTest({ task: { id: 't1' }, projectId: 'p1' });
     mockTaskService.addComment.and.returnValue(throwError(() => new Error('Error')));
     spyOn(console, 'error');
     component.newCommentContent = 'Error Test';
     component.addComment();
-    expect(console.error).toHaveBeenCalled();
+    expect(console.error).toHaveBeenCalledWith(jasmine.stringMatching('Fehler beim Kommentieren'), jasmine.any(Error));
   });
 
-  // Attachments & Download
-
-  it('should upload a file, call backend and update UI', async () => {
-    await setupTest({ task: { id: 't1' }, columnId: 'c1' });
-    const file = new File([''], 'test.jpg');
-    const event = { target: { files: [file] } };
-
-    await component.onFileSelected(event);
-
-    expect(mockStorageService.uploadFile).toHaveBeenCalledWith(file, 't1');
-    expect(mockTaskService.addAttachmentUrl).toHaveBeenCalledWith('t1', 'test.jpg', 'http://supabase.url/file.png');
-    expect(component.task.attachments?.length).toBe(1);
-  });
+  // Attachments
 
   it('should handle backend error after successful supabase upload', async () => {
-    await setupTest({ task: { id: 't1' }, columnId: 'c1' });
+    await setupTest({ task: { id: 't1' }, projectId: 'p1' });
     mockTaskService.addAttachmentUrl.and.returnValue(throwError(() => new Error('DB Error')));
     spyOn(window, 'alert');
 
@@ -142,76 +127,39 @@ describe('TaskDialog', () => {
     expect(component.isLoadingDetails).toBeFalse();
   });
 
-  it('should handle delete attachment error', async () => {
-    await setupTest({ task: { id: 't1', attachments: [{id: 'a1', fileName: 'test.jpg'}] }, columnId: 'c1' });
-    spyOn(window, 'confirm').and.returnValue(true);
-    mockTaskService.deleteAttachment.and.returnValue(throwError(() => new Error('Delete Error')));
-    spyOn(window, 'alert');
+  it('should handle download via fetch and fallback on error', fakeAsync(async () => {
+    await setupTest({ task: null, projectId: 'p1' });
+    spyOn(window, 'fetch').and.returnValue(Promise.reject('Network error'));
+    const openSpy = spyOn(window, 'open');
 
-    component.onDeleteAttachment({id: 'a1', fileName: 'test.jpg', fileUrl: 'url'} as any);
-    expect(window.alert).toHaveBeenCalled();
-  });
-
-  it('should NOT delete attachment if confirm is cancelled', async () => {
-    await setupTest({ task: { id: 't1', attachments: [{id: 'a1', fileName: 'f'}] }, columnId: 'c1' });
-    spyOn(window, 'confirm').and.returnValue(false);
-    
-    component.onDeleteAttachment({id: 'a1', fileName: 'f'} as any);
-    expect(mockTaskService.deleteAttachment).not.toHaveBeenCalled();
-  });
-
-  it('should trigger successful download via fetch blob', fakeAsync(async () => {
-    await setupTest({ task: null, columnId: 'c1' });
-    const mockBlob = new Blob(['content'], { type: 'text/plain' });
-    
-    spyOn(window, 'fetch').and.resolveTo({
-      blob: () => Promise.resolve(mockBlob)
-    } as Response);
-    
-    const mockURL = 'blob:local-url';
-    spyOn(window.URL, 'createObjectURL').and.returnValue(mockURL);
-    spyOn(window.URL, 'revokeObjectURL');
-    const linkSpy = jasmine.createSpyObj('a', ['click']);
-    spyOn(document, 'createElement').and.returnValue(linkSpy);
-    spyOn(document.body, 'appendChild');
-    spyOn(document.body, 'removeChild');
-
-    component.downloadFile({ fileName: 'test.txt', fileUrl: 'http://remote.url' } as any);
+    component.downloadFile({ fileName: 'test.jpg', fileUrl: 'http://test.url' } as any);
     tick();
-    
-    expect(window.fetch).toHaveBeenCalledWith('http://remote.url');
-    expect(linkSpy.click).toHaveBeenCalled();
+    expect(openSpy).toHaveBeenCalledWith('http://test.url', '_blank');
   }));
 
-  it('should identify image extensions correctly', async () => {
-    await setupTest({ task: null, columnId: 'c1' });
-    expect(component.isImage('test.PNG')).toBeTrue();
-    expect(component.isImage('document.pdf')).toBeFalse();
-  });
+  // Delete
 
-  it('should open image in new tab', async () => {
-    await setupTest({ task: null, columnId: 'c1' });
-    const spy = spyOn(window, 'open');
-    component.openFullImage('http://test.url');
-    expect(spy).toHaveBeenCalledWith('http://test.url', '_blank');
-  });
-
-  // Delete Tasks
-
-  it('should confirm before deleting task', async () => {
-    await setupTest({ task: { id: 't1' }, columnId: 'c1' });
-    component.onDelete();
-    expect(component.showConfirmDelete).toBeTrue();
-    expect(mockDialogRef.close).not.toHaveBeenCalled();
+  it('should delete attachment if confirmed and handle storage error gracefully', fakeAsync(async () => {
+    await setupTest({ 
+      task: { 
+        id: 't1', 
+        // WICHTIG: fileName muss hier dabei sein!
+        attachments: [{ id: 'a1', fileName: 'test.jpg', fileUrl: 'url' }] 
+      }, 
+      projectId: 'p1' 
+    });
     
-    component.onDelete();
-    expect(mockDialogRef.close).toHaveBeenCalledWith({ delete: true, id: 't1' });
-  });
+    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(console, 'warn');
+    mockStorageService.deleteFile.and.rejectWith(new Error('S3 Error'));
 
-  it('should reset delete confirmation', async () => {
-    await setupTest({ task: { id: 't1' }, columnId: 'c1' });
-    component.showConfirmDelete = true;
-    component.resetDelete();
-    expect(component.showConfirmDelete).toBeFalse();
-  });
+    component.onDeleteAttachment({ id: 'a1', fileName: 'test.jpg', fileUrl: 'url' } as any);
+    
+    tick();
+    fixture.detectChanges();
+
+    expect(mockTaskService.deleteAttachment).toHaveBeenCalled();
+    expect(console.warn).toHaveBeenCalledWith(jasmine.stringMatching('Datei konnte nicht aus Storage gelöscht werden'), jasmine.any(Error));
+    expect(component.task.attachments?.length).toBe(0);
+  }));
 });

@@ -2,10 +2,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TaskList } from './task-list';
 import { Task } from '../../../core/models/task-model';
 import { Column } from '../../../core/models/column-model';
+import { UserHelperService } from '../../../core/services/utils/user-helper.service';
 
 describe('TaskList', () => {
   let component: TaskList;
   let fixture: ComponentFixture<TaskList>;
+  let mockUserHelper: jasmine.SpyObj<UserHelperService>;
 
   const mockTasks: Task[] = [
     { 
@@ -40,8 +42,13 @@ describe('TaskList', () => {
   ];
 
   beforeEach(async () => {
+    mockUserHelper = jasmine.createSpyObj('UserHelperService', ['getAvatarColor', 'getShortName']);
+
     await TestBed.configureTestingModule({
-      imports: [TaskList]
+      imports: [TaskList],
+      providers: [
+        { provide: UserHelperService, useValue: mockUserHelper }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(TaskList);
@@ -59,31 +66,10 @@ describe('TaskList', () => {
     it('should filter tasks correctly by columnId', () => {
       const todoTasks = component.getTasksByColumn('col-todo');
       const doneTasks = component.getTasksByColumn('col-done');
+      
       expect(todoTasks.length).toBe(2);
       expect(doneTasks.length).toBe(1);
-    });
-  });
-
-  describe('Avatar & Name Logic', () => {
-    it('should return a color string for a name', () => {
-      const color1 = component.getAvatarColor('Elias');
-      expect(color1).toMatch(/^#[0-9a-fA-F]{6}$/);
-      expect(color1).toBe(component.getAvatarColor('Elias'));
-    });
-
-    it('should return default color if name is null or empty', () => {
-      expect(component.getAvatarColor(null)).toBe('#ccc');
-      expect(component.getAvatarColor('')).toBe('#ccc');
-    });
-
-    it('should shorten email to name correctly', () => {
-      expect(component.getShortName('elias.dev@example.com')).toBe('elias.dev');
-    });
-
-    it('should return dash if email is null or empty', () => {
-      expect(component.getShortName(null)).toBe('–');
-      const result = component.getShortName('');
-      expect(result === '' || result === '–').toBeTrue();
+      expect(todoTasks.every(t => t.columnId === 'col-todo')).toBeTrue();
     });
   });
 
@@ -91,8 +77,11 @@ describe('TaskList', () => {
     it('should emit editTask event when emit is called', () => {
       spyOn(component.editTask, 'emit');
       const taskToEdit = mockTasks[0];
+      
       component.editTask.emit(taskToEdit);
+      
       expect(component.editTask.emit).toHaveBeenCalledWith(taskToEdit);
     });
   });
+
 });

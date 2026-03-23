@@ -29,10 +29,11 @@
 
         <div class="col-assignee">
           <ng-container *ngIf="task.assignedTo; else unassigned">
-            <div class="mini-avatar-list" [style.background-color]="getAvatarColor(task.assignedTo)">
+            <div class="mini-avatar-list" 
+                 [style.background-color]="userHelper.getAvatarColor(task.assignedTo)">
               {{ task.assignedTo[0] | uppercase }}
             </div>
-            <span>{{ getShortName(task.assignedTo) }}</span>
+            <span>{{ userHelper.getShortName(task.assignedTo) }}</span>
           </ng-container>
           <ng-template #unassigned><span class="none">–</span></ng-template>
         </div>

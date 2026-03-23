@@ -18,6 +18,7 @@ import { StorageService } from '../../../core/services/storage.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Member } from '../../../core/models/project.model';
 import { MemberService } from '../../../core/services/member';
+import { UserHelperService } from '../../../core/services/utils/user-helper.service';
 
 @Component({
   selector: 'app-task-dialog',
@@ -54,7 +55,8 @@ export class TaskDialog {
     private taskService: TaskService,
     private authService: AuthService,
     private storageService: StorageService,
-    private memberService: MemberService
+    private memberService: MemberService,
+    public userHelper: UserHelperService
   ) {
     this.isEditMode = !!data.task;
     // Basis-Daten übernehmen
@@ -140,23 +142,6 @@ export class TaskDialog {
     error: (err: any) => console.error('Fehler beim Kommentieren', err)
   });
 }
-
-  getAvatarColor(name: string | null): string {
-    const safeName = name && name.length > 0 ? name : 'U'; 
-    
-    const colors = ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#009688', '#4caf50'];
-    let hash = 0;
-    for (let i = 0; i < safeName.length; i++) {
-      hash = safeName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return colors[Math.abs(hash) % colors.length];
-  }
-
-  // Hilfsfunktion, um aus der Email einen Namen zu machen
-  getShortName(email: string | null): string {
-    if (!email) return 'Unbekannter User';
-    return email.split('@')[0]; // Macht aus "test@example.com" -> "test"
-  }
 
   // Attachments
   async onFileSelected(event: any) {
