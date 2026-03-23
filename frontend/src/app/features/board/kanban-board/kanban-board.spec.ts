@@ -8,6 +8,8 @@ import { Task } from '../../../core/models/task-model';
 import { Column } from '../../../core/models/column-model';
 import { MatDialog } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { ProjectService } from '../../../core/services/project';
+import { Project } from '../../../core/models/project.model';
 
 describe('KanbanBoard', () => {
   let component: KanbanBoard;
@@ -15,6 +17,7 @@ describe('KanbanBoard', () => {
   let dialog: MatDialog;
   let mockColumnService: jasmine.SpyObj<ColumnService>;
   let mockTaskService: jasmine.SpyObj<TaskService>;
+  let mockProjectService: jasmine.SpyObj<ProjectService>;
 
   const initialMockColumns: Column[] = [
     { id: 'COL_TODO', name: 'To Do', isSystem: true, position: 0 },
@@ -26,9 +29,27 @@ describe('KanbanBoard', () => {
     { id: 't2', title: 'Task 2', columnId: 'COL_DONE' } as Task
   ];
 
+  const mockProjects: Project[] = [
+    { 
+      id: 'p123', 
+      name: 'Test Projekt', 
+      members: ['user1', 'user2'], 
+      updatedAt: '2024-03-20T10:00:00Z', 
+      isOwner: true 
+    },
+    { 
+      id: 'other', 
+      name: 'Anderes Projekt', 
+      members: [], 
+      updatedAt: '2024-03-19T12:00:00Z', 
+      isOwner: false 
+    }
+  ];
+
   beforeEach(async () => {
     mockColumnService = jasmine.createSpyObj('ColumnService', ['getColumns', 'createColumn', 'renameColumn', 'moveColumn', 'deleteColumn']);
     mockTaskService = jasmine.createSpyObj('TaskService', ['getProjectTasks', 'moveTask', 'getTaskDetail', 'createTask', 'updateTask', 'deleteTask']);
+    mockProjectService = jasmine.createSpyObj('ProjectService', ['getProjects']);
 
     mockColumnService.getColumns.and.returnValue(of(initialMockColumns));
     mockTaskService.getProjectTasks.and.returnValue(of(initialMockTasks));
@@ -37,6 +58,7 @@ describe('KanbanBoard', () => {
     mockTaskService.updateTask.and.returnValue(of({}));
     mockTaskService.createTask.and.returnValue(of({}));
     mockTaskService.getTaskDetail.and.returnValue(of(initialMockTasks[0]));
+    mockProjectService.getProjects.and.returnValue(of(mockProjects));
 
     await TestBed.configureTestingModule({
       imports: [KanbanBoard, NoopAnimationsModule],
@@ -45,6 +67,7 @@ describe('KanbanBoard', () => {
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'p123' } } } },
         { provide: TaskService, useValue: mockTaskService },
         { provide: ColumnService, useValue: mockColumnService },
+        { provide: ProjectService, useValue: mockProjectService },
         { provide: MatDialog, useValue: jasmine.createSpyObj('MatDialog', ['open']) }
       ]
     }).compileComponents();
@@ -57,10 +80,30 @@ describe('KanbanBoard', () => {
 
   // Init & Viewmode
 
-  it('should load initial data on init', () => {
+  it('should load initial data and project data on init', () => {
     expect(mockColumnService.getColumns).toHaveBeenCalledWith('p123');
     expect(mockTaskService.getProjectTasks).toHaveBeenCalledWith('p123');
+    expect(mockProjectService.getProjects).toHaveBeenCalled();
     expect(component.projectId).toBe('p123');
+    expect(component.project).toBeDefined();
+    expect(component.project?.id).toBe('p123');
+  });
+
+  it('should handle project not found in list', () => {
+    mockProjectService.getProjects.and.returnValue(of([{ id: 'wrong-id' } as Project]));
+
+    component.project = null; 
+    component.projectId = 'p123';
+    component.loadProjectData();
+    
+    expect(component.project).toBeNull();
+  });
+
+  it('should log error when project data fails to load', () => {
+    spyOn(console, 'error');
+    mockProjectService.getProjects.and.returnValue(throwError(() => new Error('API Fail')));
+    component.loadProjectData();
+    expect(console.error).toHaveBeenCalledWith('Fehler beim Laden der Projektdaten', jasmine.any(Error));
   });
 
   it('should switch view modes', () => {
