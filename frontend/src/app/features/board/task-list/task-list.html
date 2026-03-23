@@ -1,0 +1,46 @@
+<div class="list-view-container">
+  <div *ngFor="let col of columns" class="list-section">
+    
+    <div class="list-column-header">
+      <mat-icon>folder_open</mat-icon>
+      <h3>{{ col.name }}</h3>
+      <span class="task-count">{{ getTasksByColumn(col.id).length }} Tasks</span>
+    </div>
+
+    <div class="list-table">
+      <div class="list-row header">
+        <div class="col-prio">Prio</div>
+        <div class="col-title">Titel</div>
+        <div class="col-assignee">Zuweisung</div>
+      </div>
+
+      <div class="list-row item" 
+           *ngFor="let task of getTasksByColumn(col.id)"
+           (dblclick)="editTask.emit(task)">
+        
+        <div class="col-prio">
+          <mat-icon [class.low-prio]="task.priority === 'LOW'"
+                    [class.med-prio]="task.priority === 'MEDIUM'"
+                    [class.high-prio]="task.priority === 'HIGH'"
+                    [matTooltip]="task.priority">circle</mat-icon>
+        </div>
+
+        <div class="col-title">{{ task.title }}</div>
+
+        <div class="col-assignee">
+          <ng-container *ngIf="task.assignedTo; else unassigned">
+            <div class="mini-avatar-list" [style.background-color]="getAvatarColor(task.assignedTo)">
+              {{ task.assignedTo[0] | uppercase }}
+            </div>
+            <span>{{ getShortName(task.assignedTo) }}</span>
+          </ng-container>
+          <ng-template #unassigned><span class="none">–</span></ng-template>
+        </div>
+      </div>
+
+      <div class="empty-msg" *ngIf="getTasksByColumn(col.id).length === 0">
+        Keine Tasks vorhanden
+      </div>
+    </div>
+  </div>
+</div>
