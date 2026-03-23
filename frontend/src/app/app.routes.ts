@@ -28,11 +28,6 @@ export const routes: Routes = [
         loadChildren: () => import('./features/board/board-module').then((m) => m.BoardModule),
       },
       {
-        path: 'project/:id/dashboard',
-        loadChildren: () =>
-          import('./features/dashboard/dashboard-module').then((m) => m.DashboardModule),
-      },
-      {
         path: 'project/:id/members',
         loadChildren: () =>
           import('./features/members/members-module').then((m) => m.MembersModule),

@@ -51,7 +51,7 @@
         </mat-option>
         <mat-option *ngFor="let member of members" [value]="member.userId">
           <div class="option-wrapper">
-            <div class="mini-avatar-select" [style.background-color]="getAvatarColor(member.email)">
+            <div class="mini-avatar-select" [style.background-color]="userHelper.getAvatarColor(member.email)">
               {{ (member.email)[0] | uppercase }}
             </div>
             <span>{{member.email }}</span>
@@ -126,12 +126,12 @@
       <h3><mat-icon>chat_bubble_outline</mat-icon> Kommentare ({{ task.comments?.length || 0 }})</h3>
       <div class="comment-list">
         <div *ngFor="let comment of task.comments" class="comment-item">
-          <div class="user-avatar" [style.background-color]="getAvatarColor(comment.authorName)">
+          <div class="user-avatar" [style.background-color]="userHelper.getAvatarColor(comment.authorName)">
             {{ (comment.authorName ? comment.authorName[0] : 'U') | uppercase }}
           </div>
           <div class="comment-content-wrapper">
             <div class="comment-header">
-              <span class="author">{{ getShortName(comment.authorName) }}</span>
+              <span class="author">{{ userHelper.getShortName(comment.authorName) }}</span>
               <span class="date">{{ comment.createdAt | date:'short' }}</span>
             </div>
             <div class="comment-body">{{ comment.content }}</div>

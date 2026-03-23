@@ -15,10 +15,16 @@
               matTooltip="Listen Ansicht">
         <mat-icon>view_list</mat-icon>
       </button>
+      <button mat-icon-button
+              [class.active]="viewMode === 'dashboard'"
+              (click)="viewMode = 'dashboard'"
+              matTooltip="Projekt Dashboard">
+        <mat-icon>dashboard</mat-icon>
+      </button>
     </div>
   </div>
   
-  <div class="header-actions">
+  <div class="header-actions" *ngIf="viewMode !== 'dashboard'">
     <mat-icon 
       class="info-tooltip-icon"
       matTooltip="• Doppelklick auf Spalte: neuer Task &#10;• Doppelklick auf Karte: Details/Edit"
@@ -55,4 +61,8 @@
     (editTask)="openTaskDialog($event)">
   </app-task-list>
 
+  <app-dashboard
+    *ngIf="viewMode === 'dashboard'"
+    [projectId]="projectId!">
+  </app-dashboard>
 </div>

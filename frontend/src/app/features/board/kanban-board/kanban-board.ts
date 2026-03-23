@@ -14,6 +14,7 @@ import { ColumnService } from '../../../core/services/column.service';
 import { switchMap } from 'rxjs';
 import { TaskService } from '../../../core/services/task.service';
 import { TaskList } from '../task-list/task-list';
+import { ProjectDashboard } from '../dashboard/dashboard/dashboard';
 
 @Component({
   selector: 'app-kanban-board',
@@ -23,7 +24,8 @@ import { TaskList } from '../task-list/task-list';
     DragDropModule,
     MatTooltipModule,
     MatIconModule,
-    TaskList
+    TaskList,
+    ProjectDashboard
   ],
   templateUrl: './kanban-board.html',
   styleUrl: './kanban-board.scss',
@@ -32,7 +34,7 @@ export class KanbanBoard implements OnInit {
   allTasks: Task[] = [];
   columns: Column[] = [];
   projectId: string | null = null;
-  viewMode: 'kanban' | 'list' = 'kanban';
+  viewMode: 'kanban' | 'list' | 'dashboard' = 'kanban';
 
   constructor(
     private taskService: TaskService,
@@ -114,27 +116,27 @@ export class KanbanBoard implements OnInit {
   }
 }
 
-private launchTaskDialog(task: any, columnId?: string) {
-  const dialogRef = this.dialog.open(TaskDialog, {
-    width: '600px',
-    data: { 
-      task: task, 
-      columnId: columnId, 
-      projectId: this.projectId
-    }
-  });
+  private launchTaskDialog(task: any, columnId?: string) {
+    const dialogRef = this.dialog.open(TaskDialog, {
+      width: '600px',
+      data: { 
+        task: task, 
+        columnId: columnId, 
+        projectId: this.projectId
+      }
+    });
 
-  dialogRef.afterClosed().subscribe(result => {
-    if (!result) return;
-    if (result.delete) {
-      this.taskService.deleteTask(task.id).subscribe(() => this.refreshBoard());
-    } else if (task) {
-      this.taskService.updateTask(task.id, result).subscribe(() => this.refreshBoard());
-    } else {
-      this.taskService.createTask(columnId!, result).subscribe(() => this.refreshBoard());
-    }
-  });
-}
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) return;
+      if (result.delete) {
+        this.taskService.deleteTask(task.id).subscribe(() => this.refreshBoard());
+      } else if (task && task.id) {
+        this.taskService.updateTask(task.id, result).subscribe(() => this.refreshBoard());
+      } else {
+        this.taskService.createTask(columnId!, result).subscribe(() => this.refreshBoard());
+      }
+    });
+  }
 
   // Öffnet das Spalten Dialog Fenster
   openColumnDialog(column?: Column): void {

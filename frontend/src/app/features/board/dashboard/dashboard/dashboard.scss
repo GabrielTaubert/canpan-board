@@ -1,0 +1,111 @@
+.dashboard-container {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.calculation-status {
+  background: #fff3e0;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #ffe0b2;
+  
+  p { margin: 0 0 8px 0; font-weight: 500; color: #e65100; }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+}
+
+.stats-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;
+}
+
+.stats-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stats-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .user-info-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .mini-avatar-dashboard {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .user-details {
+      display: flex;
+      flex-direction: column;
+
+      .label {
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 0.95rem;
+        line-height: 1.2;
+      }
+
+      .sub-label {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin-top: 2px;
+      }
+    }
+  }
+
+  > .label { 
+    font-weight: 600; 
+    color: #475569; 
+  }
+  
+  .values {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+
+    .count { color: #94a3b8; font-size: 0.9rem; }
+    .points { 
+      font-weight: 700; 
+      color: #3f51b5; 
+      &.badge {
+        background: #e8eaf6;
+        padding: 4px 10px;
+        border-radius: 6px;
+      }
+    }
+  }
+}
+
+.placeholder {
+  padding: 40px;
+  text-align: center;
+  color: #94a3b8;
+  font-style: italic;
+}
