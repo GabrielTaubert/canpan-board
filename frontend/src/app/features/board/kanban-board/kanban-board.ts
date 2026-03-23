@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { KanbanColumn } from "../kanban-column/kanban-column";
 import { Task } from '../../../core/models/task-model';
 import { ActivatedRoute } from '@angular/router';
-import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { MatDialog } from '@angular/material/dialog';
 import { TaskDialog } from '../task-dialog/task-dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -109,7 +109,11 @@ export class KanbanBoard implements OnInit {
 private launchTaskDialog(task: any, columnId?: string) {
   const dialogRef = this.dialog.open(TaskDialog, {
     width: '600px',
-    data: { task, columnId }
+    data: { 
+      task: task, 
+      columnId: columnId, 
+      projectId: this.projectId
+    }
   });
 
   dialogRef.afterClosed().subscribe(result => {
