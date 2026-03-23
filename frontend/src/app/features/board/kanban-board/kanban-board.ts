@@ -15,6 +15,8 @@ import { switchMap } from 'rxjs';
 import { TaskService } from '../../../core/services/task.service';
 import { TaskList } from '../task-list/task-list';
 import { ProjectDashboard } from '../dashboard/dashboard/dashboard';
+import { ProjectService } from '../../../core/services/project';
+import { Project } from '../../../core/models/project.model';
 
 @Component({
   selector: 'app-kanban-board',
@@ -34,19 +36,22 @@ export class KanbanBoard implements OnInit {
   allTasks: Task[] = [];
   columns: Column[] = [];
   projectId: string | null = null;
+  project: Project | null = null;
   viewMode: 'kanban' | 'list' | 'dashboard' = 'kanban';
 
   constructor(
     private taskService: TaskService,
     private route: ActivatedRoute,
     private dialog: MatDialog,
-    private columnService: ColumnService
+    private columnService: ColumnService,
+    private projectService: ProjectService
   ) {}
 
   ngOnInit(): void {
     this.projectId = this.route.snapshot.paramMap.get('id');
 
     if (this.projectId) {
+      this.loadProjectData();
       this.loadInitialData();
     }
   }
@@ -61,6 +66,19 @@ export class KanbanBoard implements OnInit {
       this.taskService.getProjectTasks(this.projectId!).subscribe(tasks => {
         this.allTasks = tasks;
       });
+    });
+  }
+
+  loadProjectData(): void {
+    this.projectService.getProjects().subscribe({
+      next: (projects: Project[]) => {
+        // Wir suchen das Projekt, dessen ID mit der aus der Route übereinstimmt
+        const currentProject = projects.find(p => p.id === this.projectId);
+        if (currentProject) {
+          this.project = currentProject;
+        }
+      },
+      error: (err) => console.error('Fehler beim Laden der Projektdaten', err)
     });
   }
 
